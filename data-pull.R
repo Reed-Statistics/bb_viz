@@ -1,14 +1,8 @@
-# Do this once
-# devtools::install_github("beanumber/statcastr")
-
 library(tidyverse)
-library(statcastr)
-library(etl)
-db <- src_mysql_cnf(dbname = "statcast")
-sc <- etl("statcastr", db = db, dir = "~/Data/statcastr")
-
-sc %>%
-  etl_extract(year = 2019, month = 4:7) %>%
-  etl_transform() %>%
-  etl_load()
-
+# Do this once: 
+# devtools::install_github("BillPetti/baseballr")
+library(baseballr)
+correa <- scrape_statcast_savant(start_date = "2019-05-01",
+                                 end_date = "2019-05-31",
+                                 playerid = 621043,
+                                 player_type = "batter")
