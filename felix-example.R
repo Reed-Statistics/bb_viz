@@ -2,15 +2,17 @@ library(pitchRx)
 library(baseballr)
 library(tidyverse)
 library(viridis)
+library(scales)
 
 `%notin%` <- Negate(`%in%`)
 
 
-# Grabs pitch data from start of dataset to today
-felix <- scrape_statcast_savant(start_date = "2008-03-25",
-                                 end_date = Sys.Date(),
-                                 playerid = 433587,
-                                 player_type = "pitcher")
+# Grabs pitch data from a season
+# Can only grab a season at once
+felix <- scrape_statcast_savant(start_date = "2014-03-20",
+                                end_date = "2014-11-10",
+                                playerid = 433587,
+                                player_type = "pitcher")
 
 # Plots place ball crosses the plate with color mapped to release speed
 ggplot(data = felix,
@@ -22,7 +24,17 @@ ggplot(data = felix,
                           xmax = -0.85, xmin = 0.85), alpha = 0, size=1.2,
             colour = "black") +
   scale_color_viridis_c() +
-  theme_bw()
+  xlim(-6,6) +
+  labs(color = "Release Speed",
+       title = "Felix Hernandez Pitches by Release Speed",
+       subtitle = "2014 MLB Season") +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "grey96"),
+        plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+        legend.position = "bottom") +
+  guides(colour = guide_colourbar(title.position = "top"))
+
 
 # Plotting by pitch type
 felix %>%
@@ -35,6 +47,13 @@ felix %>%
                           xmax = -0.85, xmin = 0.85), alpha = 0, size=1.2,
             colour = "black") +
   scale_color_viridis_d() +
-  theme_bw() +
-  xlim(-10,10) +
-  ylim(-1,7)
+  labs(color = "Pitch Type",
+       title = "Felix Hernandez Pitches by Pitch Type",
+       subtitle = "2014 MLB Season") +
+  xlim(-6,6) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "grey96"),
+        plot.title = element_text(hjust = 0.5), 
+        plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+        legend.position = "bottom") +
+  guides(colour = guide_legend(title.position = "top"))
