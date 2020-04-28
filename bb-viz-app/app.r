@@ -15,7 +15,18 @@ players <- players
 
 # User interface
 ui <- fluidPage(theme = shinytheme("flatly"),
-                titlePanel("An Interactive Baseball Visualization Application"))
+                titlePanel("An Interactive Baseball Visualization Application"),
+                sidebarPanel(),
+                mainPanel(
+                  tabsetPanel(
+                    type = "tabs",
+                    tabPanel("Spray Chart"),
+                    tabPanel("Pitching Chart"),
+                    tabPanel("Similarity Search"),
+                    tabPanel("Information")
+                    )
+                  )
+                )
 
 # Server function
 server <- function(input, output){}
