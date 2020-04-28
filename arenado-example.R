@@ -58,7 +58,14 @@ arenado_plot
 ### Sample Plot (Interactive Spray Chart)
 
 arenado_plot2 <- arenado %>%
-  ggplot(aes(x = hc_x, y = -hc_y)) +
+  ggplot(aes(x = hc_x, y = -hc_y,
+             text = paste('Date: ', game_date, "\n",
+                          'Pitch: ', pitch_name, "\n",
+                          'Hit Result: ', hit_result, "\n",
+                          'Exit Velocity (MPH): ', launch_speed, "\n",
+                          'Launch Angle: ', launch_speed, "\n",
+                          'Estimated Distance (ft): ', hit_distance_sc, "\n",
+                          sep = ""))) +
   geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
   geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
   coord_fixed() +
@@ -73,11 +80,7 @@ arenado_plot2 <- arenado %>%
         plot.subtitle = element_text(hjust = 0.5, face = "italic"),
         legend.title = element_blank())
 
-ggplotly(arenado_plot2, dynamicTicks = TRUE, hoverinfo = 'text',
-         text = ~paste('</br> Date: ', game_date,
-                       '</br> Exit Velocity (MPH): ', launch_speed,
-                       '</br> Launch Angle: ', launch_speed,
-                       '</br> Estimated Distance (ft): ', hit_distance_sc)) %>%
+ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
   layout(xaxis = list(
     title = "",
     zeroline = FALSE,
@@ -89,8 +92,7 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, hoverinfo = 'text',
            zeroline = FALSE,
            showline = FALSE,
            showticklabels = FALSE,
-           showgrid = FALSE)) %>%
-  layout(legend=list(title=list(text='<b> Hit Result </b>')))
+           showgrid = FALSE))
 
 
 
