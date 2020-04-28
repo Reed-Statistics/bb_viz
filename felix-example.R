@@ -15,6 +15,29 @@ felix <- scrape_statcast_savant(start_date = "2014-03-20",
                                 playerid = 433587,
                                 player_type = "pitcher")
 
+felix <- felix %>%
+  mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
+                              ifelse(description == "called_strike", "Called Strike",
+                                     ifelse(description %in% c("ball",
+                                                               "intent_ball"), "Ball",
+                                            ifelse(description == "foul", "Foul",
+                                                   ifelse(description %in% c("swinging_strike",
+                                                                           "swinging_strike_blocked"), "Swinging Strike",
+                                                          ifelse(description %in% c("hit_into_play_no_out",
+                                                                                    "hit_into_play_score",
+                                                                                    "hit_into_play"), "Hit into Play",
+                                                                 ifelse(description == "pitchout", "Pitch Out",
+                                                                        ifelse(description == "foul tip", "Foul Tip",
+                                                                               ifelse(description %in% c("missed_bunt",
+                                                                                                         "foul_bunt"), "Bunt Attempt", "Hit by Pitch")))))))))) %>%
+  mutate(pitch_type = ifelse(pitch_type == "CU", "Curveball",
+                              ifelse(pitch_type == "SI", "Sinker",
+                                     ifelse(pitch_type == "CH", "Changeup",
+                                            ifelse(pitch_type == "FF", "Fastball",
+                                                   ifelse(pitch_type == "PO", "Pitch out",
+                                                          ifelse(pitch_type == "SL", "Slider",
+                                                                 ifelse(pitch_type == "IN", "Intentional Ball", "Null"))))))))
+
 # Plots place ball crosses the plate with color mapped to release speed
 ggplot(data = felix,
        mapping = aes(x = plate_x,
@@ -53,9 +76,6 @@ felix_2014 <- felix %>%
          ) +
   coord_fixed() +
   geom_point(alpha = 0.5) +
-  #geom_rect(mapping = aes(ymax = 3.5, ymin = 1.5, 
-   #                       xmax = -0.85, xmin = 0.85), alpha = 0, size=1.2,
-    #        colour = "black") +
   geom_segment(x = -0.85, xend = 0.85, y = 3.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
   geom_segment(x = -0.85, xend = 0.85, y = 1.5, yend = 1.5, size = 0.7, color = "black", lineend = "round") +
   geom_segment(x = -0.85, xend = -0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
