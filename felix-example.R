@@ -3,6 +3,7 @@ library(baseballr)
 library(tidyverse)
 library(viridis)
 library(scales)
+library(plotly)
 
 `%notin%` <- Negate(`%in%`)
 
@@ -36,16 +37,29 @@ ggplot(data = felix,
   guides(colour = guide_colourbar(title.position = "top"))
 
 
-# Plotting by pitch type
-felix %>%
+# Plotting by pitch type with interactivity
+
+felix_2014 <- felix %>%
   filter(pitch_type %notin% c("IN", "null")) %>%
   ggplot(mapping = aes(x = plate_x,
                      y = plate_z,
-                     color = pitch_type)) +
+                     color = pitch_type,
+                     text = paste('Date: ', game_date, "\n",
+                                  'Pitch: ', pitch_type, "\n",
+                                  'Release Speed: ', release_speed, "\n",
+                                  'Result: ', description, "\n",
+                                  sep = "")
+                     )
+         ) +
+  coord_fixed() +
   geom_point(alpha = 0.5) +
-  geom_rect(mapping = aes(ymax = 3.5, ymin = 1.5, 
-                          xmax = -0.85, xmin = 0.85), alpha = 0, size=1.2,
-            colour = "black") +
+  #geom_rect(mapping = aes(ymax = 3.5, ymin = 1.5, 
+   #                       xmax = -0.85, xmin = 0.85), alpha = 0, size=1.2,
+    #        colour = "black") +
+  geom_segment(x = -0.85, xend = 0.85, y = 3.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
+  geom_segment(x = -0.85, xend = 0.85, y = 1.5, yend = 1.5, size = 0.7, color = "black", lineend = "round") +
+  geom_segment(x = -0.85, xend = -0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
+  geom_segment(x = 0.85, xend = 0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
   scale_color_viridis_d() +
   labs(color = "Pitch Type",
        title = "Felix Hernandez Pitches by Pitch Type",
@@ -57,3 +71,20 @@ felix %>%
         plot.subtitle = element_text(hjust = 0.5, face = "italic"),
         legend.position = "bottom") +
   guides(colour = guide_legend(title.position = "top"))
+
+felix_2014
+
+
+ggplotly(felix_2014, dynamicTicks = TRUE, tooltip = 'text') %>%
+  layout(xaxis = list(
+    title = "",
+    zeroline = FALSE,
+    showline = FALSE,
+    showticklabels = FALSE,
+    showgrid = FALSE), 
+    yaxis = list(
+      title = "",
+      zeroline = FALSE,
+      showline = FALSE,
+      showticklabels = FALSE,
+      showgrid = FALSE))
