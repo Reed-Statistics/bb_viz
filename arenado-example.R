@@ -28,6 +28,9 @@ arenado <- arenado %>%
                                            ifelse(events == "triple", "Triple",
                                                   ifelse(events == "home_run", "Home Run",
                                                          ifelse(events == "sac_fly", "Sacrifice Fly", "Out")))))) %>%
+  mutate(hit_type = ifelse(bb_type == "line_drive", "Line Drive",
+                             ifelse(bb_type == "fly_ball", "Fly Ball",
+                                    ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
   mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) 
                                                  
 
@@ -61,9 +64,10 @@ arenado_plot2 <- arenado %>%
   ggplot(aes(x = hc_x, y = -hc_y,
              text = paste('Date: ', game_date, "\n",
                           'Pitch: ', pitch_name, "\n",
+                          'Hit Type: ', hit_type, "\n",
                           'Hit Result: ', hit_result, "\n",
                           'Exit Velocity (MPH): ', launch_speed, "\n",
-                          'Launch Angle: ', launch_speed, "\n",
+                          'Launch Angle: ', launch_angle, "\n",
                           'Estimated Distance (ft): ', hit_distance_sc, "\n",
                           sep = ""))) +
   geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
@@ -77,7 +81,6 @@ arenado_plot2 <- arenado %>%
   theme_void() +
   theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
         plot.title = element_text(hjust = 0.5), 
-        plot.subtitle = element_text(hjust = 0.5, face = "italic"),
         legend.title = element_blank())
 
 ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
