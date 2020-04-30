@@ -34,12 +34,12 @@ ui <- navbarPage(theme = shinytheme("flatly"),
 server <- function(input, output){
 
 # Pitching output and data compiling
-  pitch_data <- reactive({
-    scrape_statcast_savant(start_date = "2014-03-20",
+pitch_data <- reactive({
+  scrape_statcast_savant(start_date = "2014-03-20",
                            end_date = "2014-11-10",
                            playerid = 433587,
                            player_type = "pitcher") %>%
-      mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
+    mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
                                   ifelse(description == "called_strike", "Called Strike",
                                          ifelse(description %in% c("ball",
                                                                    "intent_ball"), "Ball",
@@ -53,7 +53,7 @@ server <- function(input, output){
                                                                             ifelse(description == "foul tip", "Foul Tip",
                                                                                    ifelse(description %in% c("missed_bunt",
                                                                                                              "foul_bunt"), "Bunt Attempt", "Hit by Pitch")))))))))) %>%
-      mutate(pitch_type = ifelse(pitch_type == "CU", "Curveball",
+    mutate(pitch_type = ifelse(pitch_type == "CU", "Curveball",
                                  ifelse(pitch_type == "SI", "Sinker",
                                         ifelse(pitch_type == "CH", "Changeup",
                                                ifelse(pitch_type == "FF", "Fastball",
