@@ -18,10 +18,10 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  title = "An Interactive Baseball Visualization Application",
                  tabPanel("Spray Chart",
                           sidebarPanel(),
-                          mainPanel(plotOutput(outputId = "pitch_plot"))),
+                          mainPanel()),
                  tabPanel("Pitching Chart",
                           sidebarPanel(),
-                          mainPanel()),
+                          mainPanel(plotlyOutput(outputId = "pitch_plot"))),
                  tabPanel("Similarity Search",
                           sidebarPanel(),
                           mainPanel()),
@@ -95,7 +95,7 @@ static_plot <- reactive({
     guides(colour = guide_legend(title.position = "top"))
 })
 
-output$pitch_plot <- renderPlot({
+output$pitch_plot <- renderPlotly({
   ggplotly(static_plot(), dynamicTicks = TRUE, tooltip = 'text') %>%
     layout(xaxis = list(
       title = "",
