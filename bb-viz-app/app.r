@@ -14,20 +14,21 @@ library(pitchRx)
 players <- players
 
 # User interface
-ui <- fluidPage(theme = shinytheme("flatly"),
-                titlePanel("An Interactive Baseball Visualization Application"),
-                sidebarPanel(),
-                mainPanel(
-                  tabsetPanel(
-                    type = "tabs",
-                    tabPanel("Spray Chart"),
-                    tabPanel("Pitching Chart",
-                             plotOutput(outputId = "pitch_plot")),
-                    tabPanel("Similarity Search"),
-                    tabPanel("Information")
-                    )
-                  )
-                )
+ui <- navbarPage(theme = shinytheme("flatly"),
+                 title = "An Interactive Baseball Visualization Application",
+                 tabPanel("Spray Chart",
+                          sidebarPanel(),
+                          mainPanel(plotOutput(outputId = "pitch_plot"))),
+                 tabPanel("Pitching Chart",
+                          sidebarPanel(),
+                          mainPanel()),
+                 tabPanel("Similarity Search",
+                          sidebarPanel(),
+                          mainPanel()),
+                 tabPanel("Information",
+                          sidebarPanel(),
+                          mainPanel())
+                 )
 
 # Server function
 server <- function(input, output){
