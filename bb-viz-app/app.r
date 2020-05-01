@@ -20,7 +20,12 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           sidebarPanel(),
                           mainPanel()),
                  tabPanel("Pitching Chart",
-                          sidebarPanel(),
+                          sidebarPanel(
+                            selectizeInput(inputId = "pitcher",
+                                           choices = players$full_name,
+                                           label = "Select pitcher",
+                                           selected = NULL)
+                          ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot"))),
                  tabPanel("Similarity Search",
                           sidebarPanel(),
@@ -31,7 +36,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  )
 
 # Server function
-server <- function(input, output){
+server <- function(input, output, session){
+  updateSelectizeInput(session = session, inputId = 'pitcher')
 
 # Pitching output and data compiling
 pitch_data <- reactive({
