@@ -7,6 +7,7 @@ library(plotly)
 library(viridis)
 library(scales)
 library(pitchRx)
+library(glue)
 
 #define working directory
 
@@ -43,10 +44,15 @@ server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
   
   # Pitching output and data compiling
+  player_filter <- reactive({
+    players %>%
+      filter(full_name == input$pitcher)
+  })
+  
   pitch_data <- reactive({
     scrape_statcast_savant(start_date = "2014-03-20",
                            end_date = "2014-11-10",
-                           playerid = 433587,
+                           playerid = player_filter()$id,
                            player_type = "pitcher") %>%
       mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
                                   ifelse(description == "called_strike", "Called Strike",
@@ -71,7 +77,6 @@ server <- function(input, output, session){
                                                                     ifelse(pitch_type == "IN", "Intentional Ball", "Null"))))))))
   })
   
-  
   static_plot <- reactive({
     pitch_data() %>%
       filter(pitch_type %notin% c("IN", "null")) %>%
@@ -93,7 +98,7 @@ server <- function(input, output, session){
       geom_segment(x = 0.85, xend = 0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
       scale_color_viridis_d() +
       labs(color = "Pitch Type",
-           title = "Felix Hernandez Pitches by Pitch Type",
+           title = glue("{input$pitcher} Pitches by Pitch Type"),
            subtitle = "2014 MLB Season") +
       xlim(-6,6) +
       theme_void() +
