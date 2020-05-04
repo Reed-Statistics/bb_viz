@@ -25,10 +25,17 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           mainPanel()),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
+                            p("Note that the drop down
+                              currently includes all players, so please select a player
+                              that you know is a pitcher."),
                             selectizeInput(inputId = "pitcher",
                                            choices = players$full_name,
                                            label = "Select pitcher",
-                                           selected = NULL)
+                                           selected = NULL),
+                            dateRangeInput(inputId = "dates",
+                                           label = "Date Range",
+                                           min = "2008-03-25",
+                                           max = Sys.Date())
                           ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot"))),
                  tabPanel("Similarity Search",
@@ -50,8 +57,8 @@ server <- function(input, output, session){
   })
   
   pitch_data <- reactive({
-    scrape_statcast_savant(start_date = "2014-03-20",
-                           end_date = "2014-11-10",
+    scrape_statcast_savant(start_date = input$dates[1],
+                           end_date = input$dates[2],
                            playerid = player_filter()$id,
                            player_type = "pitcher") %>%
       mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
