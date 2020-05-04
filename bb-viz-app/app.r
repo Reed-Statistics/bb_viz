@@ -31,19 +31,31 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             selectizeInput(inputId = "pitcher",
                                            choices = players$full_name,
                                            label = "Select pitcher",
-                                           selected = NULL),
+                                           selected = "Justin Verlander"),
+                            p("Do not select date ranges outside of the same calendar year."),
                             dateRangeInput(inputId = "dates",
                                            label = "Date Range",
                                            min = "2008-03-25",
-                                           max = Sys.Date())
+                                           max = Sys.Date(),
+                                           start = "2011-05-01",
+                                           end = "2011-05-31"),
+                            radioButtons(inputId = "radio",
+                                         label = "Radio buttons",
+                                         choices = list("Pitch Type" = 1, "Speed" = 2), 
+                                         selected = 1),
+                            submitButton("Update Plot")
                           ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot"))),
                  tabPanel("Similarity Search",
                           sidebarPanel(),
                           mainPanel()),
                  tabPanel("Information",
-                          sidebarPanel(),
-                          mainPanel())
+                          mainPanel(
+                            p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
+                              as a final project from Math 241: Data Science at Reed College in Spring 2020.
+                              The goal of this app is to allow for the user to explore and visualize many
+                              metrics that have been recorded of baseball players since 2008.")
+                          ))
 )
 
 # Server function
@@ -129,7 +141,8 @@ server <- function(input, output, session){
           zeroline = FALSE,
           showline = FALSE,
           showticklabels = FALSE,
-          showgrid = FALSE))
+          showgrid = FALSE)) %>% 
+      config(displayModeBar = F)
   })
   
 }
