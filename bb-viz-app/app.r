@@ -76,27 +76,45 @@ server <- function(input, output, session){
                            end_date = input$dates[2],
                            playerid = pitcher_filter()$id,
                            player_type = "pitcher") %>%
-      mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
-                                  ifelse(description == "called_strike", "Called Strike",
-                                         ifelse(description %in% c("ball",
-                                                                   "intent_ball"), "Ball",
-                                                ifelse(description == "foul", "Foul",
-                                                       ifelse(description %in% c("swinging_strike",
-                                                                                 "swinging_strike_blocked"), "Swinging Strike",
-                                                              ifelse(description %in% c("hit_into_play_no_out",
-                                                                                        "hit_into_play_score",
-                                                                                        "hit_into_play"), "Hit into Play",
-                                                                     ifelse(description == "pitchout", "Pitch Out",
-                                                                            ifelse(description == "foul tip", "Foul Tip",
-                                                                                   ifelse(description %in% c("missed_bunt",
-                                                                                                             "foul_bunt"), "Bunt Attempt", "Hit by Pitch")))))))))) %>%
-      mutate(pitch_type = ifelse(pitch_type == "CU", "Curveball",
-                                 ifelse(pitch_type == "SI", "Sinker",
-                                        ifelse(pitch_type == "CH", "Changeup",
-                                               ifelse(pitch_type == "FF", "Fastball",
-                                                      ifelse(pitch_type == "PO", "Pitch out",
-                                                             ifelse(pitch_type == "SL", "Slider",
-                                                                    ifelse(pitch_type == "IN", "Intentional Ball", "Null"))))))))
+      mutate(
+        description = case_when(
+          description %in% c("called_strike",
+                             "swinging_strike_blocked") ~ "Called Strike",
+          description == "swinging_strike" ~ "Swinging Strike",
+          description == "blocked_ball" ~ "Blocked Ball",
+          description %in% c("ball",
+                             "intent_ball") ~ "Ball",
+          description %in% c(
+            "hit_into_play_no_out",
+            "hit_into_play_score",
+            "hit_into_play"
+          ) ~ "Hit into Play",
+          description == "pitchout" ~ "Pitch Out",
+          description %in% c("foul_tip",
+                             "foul") ~ "Foul",
+          description %in% c("missed_bunt",
+                             "foul_bunt") ~ "Bunt Attempt",
+          description == "hit_by_pitch" ~ "Hit By Pitch"
+        ),
+        pitch_type = case_when(
+          pitch_type == "FF" ~ "Fastball (4 Seam)",
+          pitch_type == "FT" ~ "Fastball (2 Seam)",
+          pitch_type == "FC" ~ "Fastball (Cut)",
+          pitch_type == "SI" ~ "Sinker",
+          pitch_type == "FS" ~ "Splitter",
+          pitch_type == "SL" ~ "Slider",
+          pitch_type == "CH" ~ "Changeup",
+          pitch_type == "CU" ~ "Curveball",
+          pitch_type == "KC" ~ "Knuckle Curve",
+          pitch_type == "KN" ~ "Knuckleball",
+          pitch_type == "FO" ~ "Forkball",
+          pitch_type == "EP" ~ "Eephus",
+          pitch_type == "SC" ~ "Screwball",
+          pitch_type == "IN" ~ "Intentional Ball",
+          pitch_type == "PO" ~ "Pitch out",
+          pitch_type == "UN" ~ "Unknown"
+        )
+      )
   })
   
   static_plot <- reactive({
