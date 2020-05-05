@@ -52,9 +52,9 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  tabPanel("Information",
                           mainPanel(
                             p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
-                              as a final project from Math 241: Data Science at Reed College in Spring 2020.
-                              The goal of this app is to allow for the user to explore and visualize many
-                              metrics that have been recorded of baseball players since 2008.")
+                              as a final project for Math 241: Data Science at Reed College in Spring 2020.
+                              The goal of this app is to allow the user to explore and visualize many
+                              of the advanced metrics that have been recorded for Major League Baseball since 2008.")
                           ))
 )
 
