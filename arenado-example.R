@@ -107,6 +107,6 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 # hover over results: game date, pitch name, hit type, hit result, launch angle, exit velocity, estimated BA, description (inning, teams, score)?
 # filter/color by options: hit result, pitch name, hit type
 # ouput: plot, title, summary stats
-# warning: comtains missing values
+# warning: contains missing values
 # bonus: change font
 
