@@ -8,6 +8,7 @@ library(viridis)
 library(scales)
 library(pitchRx)
 library(glue)
+library(readr)
 
 #define working directory
 
@@ -17,6 +18,11 @@ head(daily_batter_bref(t1 = "2015-08-01", t2 = "2015-10-03"))
 # Load all static dataframes here
 players <- players
 
+positions <- read_csv("../positions.csv")
+pitchers <- positions %>%
+  filter(player_type == "Pitcher") %>%
+  inner_join(players) 
+
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
                  title = "An Interactive Baseball Visualization Application",
@@ -25,11 +31,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           mainPanel()),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
-                            p("Note that the drop down
-                              currently includes all players, so please select a player
-                              that you know is a pitcher."),
                             selectizeInput(inputId = "pitcher",
-                                           choices = players$full_name,
+                                           choices = pitchers$full_name,
                                            label = "Select pitcher",
                                            selected = "Justin Verlander"),
                             p("Do not select date ranges outside of the same calendar year."),
@@ -63,15 +66,15 @@ server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
   
   # Pitching output and data compiling
-  player_filter <- reactive({
-    players %>%
+  pitcher_filter <- reactive({
+    pitchers %>%
       filter(full_name == input$pitcher)
   })
   
   pitch_data <- reactive({
     scrape_statcast_savant(start_date = input$dates[1],
                            end_date = input$dates[2],
-                           playerid = player_filter()$id,
+                           playerid = pitcher_filter()$id,
                            player_type = "pitcher") %>%
       mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
                                   ifelse(description == "called_strike", "Called Strike",
@@ -129,6 +132,10 @@ server <- function(input, output, session){
   })
   
   output$pitch_plot <- renderPlotly({
+    validate(
+      need(
+      nrow(pitch_data()) != 0,
+      "Sorry! The pitcher that you have selected did not throw any pitches in this time period, according to our data. Please select a different pitcher or time period."))
     ggplotly(static_plot(), dynamicTicks = TRUE, tooltip = 'text') %>%
       layout(xaxis = list(
         title = "",
