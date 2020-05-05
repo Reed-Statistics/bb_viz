@@ -54,7 +54,12 @@ players_list <- players_list %>%
 
 write_csv(players_list, "/home/leonardr/baseball_viz/players.csv")
 
+players_positions <- left_join(players_list, positions, by = "full_name")
 
+players_positions <- players_positions %>%
+  distinct(id, .keep_all = TRUE)
+
+write_csv(players_positions, "/home/leonardr/baseball_viz/players.csv")
 
 
 
