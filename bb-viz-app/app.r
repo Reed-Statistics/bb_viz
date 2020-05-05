@@ -25,7 +25,7 @@ pitchers <- positions %>%
 
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
-                 title = "An Interactive Baseball Visualization Application",
+                 title = "Baseball VisualizeR: An Application for Baseball Visualizations",
                  tabPanel("Spray Chart",
                           sidebarPanel(),
                           mainPanel()),
