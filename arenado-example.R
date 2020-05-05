@@ -103,10 +103,12 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 ## Shiny App Spray Chart Idea:
 
 # input: player name
-# input: date range
+# input: date range (or season)
 # hover over results: game date, pitch name, hit type, hit result, launch angle, exit velocity, estimated BA, description (inning, teams, score)?
 # filter/color by options: hit result, pitch name, hit type
 # ouput: plot, title, summary stats
 # warning: contains missing values
+# custom error message for invalid date range
+# fix date so only single season possible
 # bonus: change font
 
