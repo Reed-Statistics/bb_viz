@@ -4,7 +4,8 @@ library(tidyverse)
 library(Lahman)
 library(baseballr)
 
-players <- players
+
+# Adding Positions
 
 fielding <- Fielding
 
@@ -30,7 +31,30 @@ positions <- positions %>%
 
 write_csv(positions, "/home/leonardr/baseball_viz/positions.csv")
   
-  
-  
-  
-  
+positions <- read_csv("/home/leonardr/baseball_viz/positions.csv")
+
+
+# Improved Player List
+
+players_list <- get_chadwick_lu() %>%
+  select(key_mlbam, name_last, name_first, mlb_played_last)
+
+players_list <- players_list %>%
+  drop_na(key_mlbam) %>%
+  drop_na(mlb_played_last)
+
+players_list <- players_list %>%
+  filter(mlb_played_last > 2007)
+
+players_list <- players_list %>%
+  unite("full_name", 3:2, sep = " ") 
+
+players_list <- players_list %>%
+  rename(id = key_mlbam)
+
+write_csv(players_list, "/home/leonardr/baseball_viz/players.csv")
+
+
+
+
+
