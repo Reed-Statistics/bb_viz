@@ -16,8 +16,8 @@ head(daily_batter_bref(t1 = "2015-08-01", t2 = "2015-10-03"))
 `%notin%` <- Negate(`%in%`)
 
 # Load all static dataframes here
-batters <- read_csv("/home/leonardr/baseball_viz/batters.csv")
-pitchers <- read_csv("/home/leonardr/baseball_viz/pitchers.csv")
+batters <- read_csv("../batters.csv")
+pitchers <- read_csv("../pitchers.csv")
 
 
 # User interface
@@ -38,7 +38,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            end = "2019-9-28"),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart"))),
+                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart")))),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
@@ -69,7 +69,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                               The goal of this app is to allow the user to explore and visualize many
                               of the advanced metrics that have been recorded for Major League Baseball since 2008.")
                           ))
-),
+)
 
 # Server function
 server <- function(input, output, session){
