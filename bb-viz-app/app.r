@@ -16,28 +16,38 @@ head(daily_batter_bref(t1 = "2015-08-01", t2 = "2015-10-03"))
 `%notin%` <- Negate(`%in%`)
 
 # Load all static dataframes here
-players <- players
+batters <- read_csv("/home/leonardr/baseball_viz/batters.csv")
+pitchers <- read_csv("/home/leonardr/baseball_viz/pitchers.csv")
 
-positions <- read_csv("../positions.csv")
-pitchers <- positions %>%
-  filter(player_type == "Pitcher") %>%
-  inner_join(players) 
 
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
                  title = "Baseball VisualizeR: An Application for Baseball Visualizations",
                  tabPanel("Spray Chart",
-                          sidebarPanel(),
-                          mainPanel()),
+                          sidebarPanel(
+                            selectizeInput(inputId = "batter",
+                                           choices = batters$full_name,
+                                           label = "Select Batter",
+                                           selected = "Nolan Arenado"),
+                            p("Do not select date ranges outside of the same calendar year."),
+                            dateRangeInput(inputId = "dates",
+                                           label = "Select Date Range",
+                                           min = "2015-04-05",
+                                           max = Sys.Date(),
+                                           start = "2019-03-28",
+                                           end = "2019-9-28"),
+                            submitButton("Generate Plot")
+                          ),
+                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart"))),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
                                            choices = pitchers$full_name,
-                                           label = "Select pitcher",
+                                           label = "Select Pitcher",
                                            selected = "Justin Verlander"),
                             p("Do not select date ranges outside of the same calendar year."),
                             dateRangeInput(inputId = "dates",
-                                           label = "Date Range",
+                                           label = "Select Date Range",
                                            min = "2008-03-25",
                                            max = Sys.Date(),
                                            start = "2011-05-01",
@@ -46,7 +56,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          label = "Radio buttons",
                                          choices = list("Pitch Type" = 1, "Speed" = 2), 
                                          selected = 1),
-                            submitButton("Update Plot")
+                            submitButton("Generate Plot")
                           ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot"))),
                  tabPanel("Similarity Search",
@@ -59,11 +69,12 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                               The goal of this app is to allow the user to explore and visualize many
                               of the advanced metrics that have been recorded for Major League Baseball since 2008.")
                           ))
-)
+),
 
 # Server function
 server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
+  updateSelectizeInput(session = session, inputId = 'batter')
   
   # Pitching output and data compiling
   pitcher_filter <- reactive({
@@ -142,7 +153,7 @@ server <- function(input, output, session){
            subtitle = "2014 MLB Season") +
       xlim(-6,6) +
       theme_void() +
-      theme(plot.background = element_rect(fill = "grey96"),
+      theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
             plot.title = element_text(hjust = 0.5), 
             plot.subtitle = element_text(hjust = 0.5, face = "italic"),
             legend.position = "bottom") +
@@ -169,6 +180,78 @@ server <- function(input, output, session){
           showgrid = FALSE)) %>% 
       config(displayModeBar = F)
   })
+  
+  # Batting output and data compiling
+  batter_filter <- reactive({
+    batters %>%
+      filter(full_name == input$batter)
+  })
+  
+  hit_data <- reactive({
+    scrape_statcast_savant(start_date = input$dates[1],
+                           end_date = input$dates[2],
+                           playerid = batter_filter()$id,
+                           player_type = "batter") %>%
+      filter(description %in% c("hit_into_play", "hit_into_play_no_out", "hit_into_play_score")) %>%
+      mutate(hit_result = ifelse(events == "single", "Single",
+                                 ifelse(events == "double", "Double",
+                                        ifelse(events == "triple", "Triple",
+                                               ifelse(events == "home_run", "Home Run",
+                                                      ifelse(events == "sac_fly", "Sacrifice Fly", "Out")))))) %>%
+      mutate(hit_type = ifelse(bb_type == "line_drive", "Line Drive",
+                               ifelse(bb_type == "fly_ball", "Fly Ball",
+                                      ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
+      mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run")))
+  })
+  
+  static_spray_chart <- reactive({
+    hit_data() %>%
+      ggplot(aes(x = hc_x, y = -hc_y,
+                 text = paste('Date: ', game_date, "\n",
+                              'Pitch: ', pitch_name, "\n",
+                              'Hit Type: ', hit_type, "\n",
+                              'Hit Result: ', hit_result, "\n",
+                              'Exit Velocity (MPH): ', launch_speed, "\n",
+                              'Launch Angle: ', launch_angle, "\n",
+                              'Estimated Distance (ft): ', hit_distance_sc, "\n",
+                              sep = ""))) +
+      geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
+      geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
+      coord_fixed() +
+      geom_point(aes(color = hit_result), alpha = 0.6, size = 2) +
+      scale_x_continuous(limits = c(25, 225)) +
+      scale_y_continuous(limits = c(-225, -25)) +
+      labs(title = glue("{input$batter} Spray Chart"),
+           subtitle = glue("{input$dates[1]} to {input$dates[2]}")) +
+      theme_void() +
+      theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+            plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+            legend.position = "bottom") +
+      guides(colour = guide_legend(title.position = "top"))
+  })
+  
+  output$spray_chart <- renderPlotly({
+    validate(
+      need(
+        nrow(hit_data()) != 0,
+        "Sorry! The batter that you have selected did hit any balls in play in this time period, according to our data. Please select a different batter or time period."))
+    ggplotly(static_spray_chart(), dynamicTicks = TRUE, tooltip = 'text') %>%
+      layout(xaxis = list(
+        title = "",
+        zeroline = FALSE,
+        showline = FALSE,
+        showticklabels = FALSE,
+        showgrid = FALSE), 
+        yaxis = list(
+          title = "",
+          zeroline = FALSE,
+          showline = FALSE,
+          showticklabels = FALSE,
+          showgrid = FALSE)) %>% 
+      config(displayModeBar = F)
+  })
+  
   
 }
 
