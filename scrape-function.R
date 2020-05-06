@@ -51,7 +51,7 @@ scrape_bb_viz <-
     return(bind_rows(dfs))
   }
 
-felix <- scrape_bb_viz(start_date = "2013-03-20",
+felix <- scrape_bb_viz(start_date = "2012-03-20",
                                 end_date = "2016-11-10",
                                 playerid = 433587,
                                 player_type = "pitcher")

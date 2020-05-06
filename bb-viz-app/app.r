@@ -26,6 +26,57 @@ font <- list(
   size = 14,
   color = 'gray0')
 
+# Scraping Function
+
+scrape_bb_viz <-
+  function(start_date,
+           end_date,
+           playerid,
+           player_type) {
+    first <- as.numeric(substring(start_date, 1, 4))
+    last <- as.numeric(substring(end_date, 1, 4))
+    if (first == last) {
+      scrape_statcast_savant(
+        start_date = start_date,
+        end_date = end_date,
+        playerid = playerid,
+        player_type = player_type
+      )
+    }
+    else {
+      dfs <- list(rep(NA, last - first + 1))
+      for (i in 0:(last - first)) {
+        if (i == 0) {
+          dfs[[i + 1]] <- scrape_statcast_savant(
+            start_date = start_date,
+            end_date = glue("{first + i}-12-31"),
+            playerid = playerid,
+            player_type = player_type
+          )
+        }
+        else if (i != last - first) {
+          dfs[[i + 1]] <-
+            scrape_statcast_savant(
+              start_date = glue("{first + i}-01-01"),
+              end_date = glue("{first + i}-12-31"),
+              playerid = playerid,
+              player_type = player_type
+            )
+        }
+        else {
+          dfs[[i + 1]] <-
+            scrape_statcast_savant(
+              start_date = glue("{first + i}-01-01"),
+              end_date = end_date,
+              playerid = playerid,
+              player_type = player_type
+            )
+        }
+      }
+      return(bind_rows(dfs))
+    }
+  }
+
 
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
@@ -58,7 +109,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            min = "2008-03-25",
                                            max = Sys.Date(),
                                            start = "2019-03-28",
-                                           end = "2019-9-28"),
+                                           end = "2019-09-28"),
                             radioButtons(inputId = "radio",
                                          label = "Radio buttons",
                                          choices = list("Pitch Type" = 1, "Speed" = 2), 
@@ -90,10 +141,10 @@ server <- function(input, output, session){
   })
   
   pitch_data <- reactive({
-    scrape_statcast_savant(start_date = input$dates[1],
-                           end_date = input$dates[2],
-                           playerid = pitcher_filter()$id,
-                           player_type = "pitcher") %>%
+    scrape_bb_viz(start_date = input$dates[1],
+                  end_date = input$dates[2],
+                  playerid = pitcher_filter()$id,
+                  player_type = "pitcher") %>%
       mutate(
         description = case_when(
           description %in% c("called_strike",
@@ -194,7 +245,7 @@ server <- function(input, output, session){
   })
   
   hit_data <- reactive({
-    scrape_statcast_savant(start_date = input$hit_dates[1],
+    scrape_bb_viz(start_date = input$hit_dates[1],
                            end_date = input$hit_dates[2],
                            playerid = batter_filter()$id,
                            player_type = "batter") %>%
