@@ -57,8 +57,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            label = "Select Date Range",
                                            min = "2008-03-25",
                                            max = Sys.Date(),
-                                           start = "2011-05-01",
-                                           end = "2011-05-31"),
+                                           start = "2019-03-28",
+                                           end = "2019-9-28"),
                             radioButtons(inputId = "radio",
                                          label = "Radio buttons",
                                          choices = list("Pitch Type" = 1, "Speed" = 2), 
@@ -156,13 +156,11 @@ server <- function(input, output, session){
       geom_segment(x = 0.85, xend = 0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
       scale_color_viridis_d() +
       labs(color = "Pitch Type",
-           title = glue("{input$pitcher} Pitches by Pitch Type"),
-           subtitle = "2014 MLB Season") +
+           title = glue("{input$pitcher} Pitches by Pitch Type <br><sub>{input$dates[1]} to {input$dates[2]}<sub>")) +
       xlim(-6,6) +
       theme_void() +
       theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
-            plot.title = element_text(hjust = 0.5), 
-            plot.subtitle = element_text(hjust = 0.5, face = "italic"),
+            plot.title = element_text(hjust = 0.5),
             legend.position = "bottom") +
       guides(colour = guide_legend(title.position = "top"))
   })
@@ -230,8 +228,7 @@ server <- function(input, output, session){
       scale_x_continuous(limits = c(25, 225)) +
       scale_y_continuous(limits = c(-225, -25)) +
       labs(color = "Hit Result",
-           title = glue("{input$batter} Spray Chart"),
-           subtitle = glue("{input$dates[1]} to {input$dates[2]}")) +
+           title = glue("{input$batter} Spray Chart <br><sub>{input$dates[1]} to {input$dates[2]}<sub>")) +
       theme_void() +
       theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
             plot.title = element_text(hjust = 0.5),
