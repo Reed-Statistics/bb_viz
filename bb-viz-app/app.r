@@ -221,13 +221,13 @@ server <- function(input, output, session){
       geom_point(aes(color = hit_result), alpha = 0.6, size = 2) +
       scale_x_continuous(limits = c(25, 225)) +
       scale_y_continuous(limits = c(-225, -25)) +
-      labs(title = glue("{input$batter} Spray Chart"),
+      labs(color = "Hit Result",
+           title = glue("{input$batter} Spray Chart"),
            subtitle = glue("{input$dates[1]} to {input$dates[2]}")) +
       theme_void() +
       theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
             plot.title = element_text(hjust = 0.5),
-            plot.subtitle = element_text(hjust = 0.5, face = "italic"),
-            legend.position = "bottom") +
+            plot.subtitle = element_text(hjust = 0.5, face = "italic")) +
       guides(colour = guide_legend(title.position = "top"))
   })
   
@@ -249,7 +249,7 @@ server <- function(input, output, session){
           showline = FALSE,
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
-      config(displayModeBar = F)
+      config(displayModeBar = F) %>% layout(autosize = F, width = 500, height = 400)
   })
   
   
