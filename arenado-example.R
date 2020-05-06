@@ -111,4 +111,5 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 # fix date so only single season possible
 # bonus: change font, other cosmetic touchups
 # spraycharts for pitchers (e.g. Shohei Ohtani, Madison Bumgarner, Michael Lorenzen)
+# only from 2015 or beyond
 
