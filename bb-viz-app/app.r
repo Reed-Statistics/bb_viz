@@ -37,7 +37,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            label = "Select Batter",
                                            selected = "Nolan Arenado"),
                             p("Do not select date ranges outside of the same calendar year."),
-                            dateRangeInput(inputId = "dates",
+                            dateRangeInput(inputId = "hit_dates",
                                            label = "Select Date Range",
                                            min = "2015-04-05",
                                            max = Sys.Date(),
@@ -194,8 +194,8 @@ server <- function(input, output, session){
   })
   
   hit_data <- reactive({
-    scrape_statcast_savant(start_date = input$dates[1],
-                           end_date = input$dates[2],
+    scrape_statcast_savant(start_date = input$hit_dates[1],
+                           end_date = input$hit_dates[2],
                            playerid = batter_filter()$id,
                            player_type = "batter") %>%
       filter(description %in% c("hit_into_play", "hit_into_play_no_out", "hit_into_play_score")) %>%
@@ -213,13 +213,14 @@ server <- function(input, output, session){
   static_spray_chart <- reactive({
     hit_data() %>%
       ggplot(aes(x = hc_x, y = -hc_y,
-                 text = paste('Date: ', game_date, "\n",
-                              'Pitch: ', pitch_name, "\n",
-                              'Hit Type: ', hit_type, "\n",
-                              'Hit Result: ', hit_result, "\n",
-                              'Exit Velocity (MPH): ', launch_speed, "\n",
-                              'Launch Angle: ', launch_angle, "\n",
-                              'Estimated Distance (ft): ', hit_distance_sc, "\n",
+                 text = paste('Date:', game_date, "\n",
+                              'Inning:', inning_topbot, inning, "\n",
+                              'Pitch:', pitch_name, "\n",
+                              'Hit Type:', hit_type, "\n",
+                              'Hit Result:', hit_result, "\n",
+                              'Exit Velocity (MPH):', launch_speed, "\n",
+                              'Launch Angle:', launch_angle, "\n",
+                              'Estimated Distance (ft):', hit_distance_sc, "\n",
                               sep = ""))) +
       geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
       geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
@@ -228,7 +229,7 @@ server <- function(input, output, session){
       scale_x_continuous(limits = c(25, 225)) +
       scale_y_continuous(limits = c(-225, -25)) +
       labs(color = "Hit Result",
-           title = glue("{input$batter} Spray Chart <br><sub>{input$dates[1]} to {input$dates[2]}<sub>")) +
+           title = glue("{input$batter} Spray Chart <br><sub>{input$hit_dates[1]} to {input$hit_dates[2]}<sub>")) +
       theme_void() +
       theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
             plot.title = element_text(hjust = 0.5),
