@@ -19,6 +19,13 @@ head(daily_batter_bref(t1 = "2015-08-01", t2 = "2015-10-03"))
 batters <- read_csv("../batters.csv")
 pitchers <- read_csv("../pitchers.csv")
 
+# Fonts Properties
+
+font <- list(
+  family = "Helvetica Neue",
+  size = 14,
+  color = 'gray0')
+
 
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
@@ -178,7 +185,8 @@ server <- function(input, output, session){
           showline = FALSE,
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
-      config(displayModeBar = F)
+      config(displayModeBar = F) %>%
+      layout(font = font)
   })
   
   # Batting output and data compiling
@@ -249,7 +257,9 @@ server <- function(input, output, session){
           showline = FALSE,
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
-      config(displayModeBar = F) %>% layout(autosize = F, width = 500, height = 400)
+      config(displayModeBar = F) %>% 
+      layout(autosize = F, width = 500, height = 400) %>%
+      layout(font = font)
   })
   
   
