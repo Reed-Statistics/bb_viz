@@ -144,6 +144,7 @@ batters <- left_join(batters, batting, by = "key_bbref")
 batters <- batters %>%
   select(id, full_name, mlb_played_last, player_type, balls_in_play) %>%
   filter(balls_in_play > 0)
+
   
 
 # Write CSV
