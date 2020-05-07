@@ -89,28 +89,6 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            choices = batters$full_name,
                                            label = "Select Batter:",
                                            selected = "Nolan Arenado"),
-                            checkboxGroupInput("hit_result_selection", "Filter by Batted Ball Result:",
-                                               choices = list("Out",
-                                                 "Sacrifice Fly",
-                                                 "Single",
-                                                 "Double",
-                                                 "Triple",
-                                                 "Home Run"),
-                                               selected = c("Out",
-                                               "Sacrifice Fly",
-                                               "Single",
-                                               "Double",
-                                               "Triple",
-                                               "Home Run")),
-                            checkboxGroupInput("hit_type_selection", "Filter by Batted Ball Type:",
-                                               choices = list("Ground Ball",
-                                                 "Line Drive",
-                                                 "Fly Ball",
-                                                 "Pop Fly"),
-                                               selected = c("Ground Ball",
-                                               "Line Drive",
-                                               "Fly Ball",
-                                               "Pop Fly")),
                             dateRangeInput(inputId = "hit_dates",
                                            label = "Select Date Range:",
                                            min = "2015-04-05",
@@ -118,6 +96,43 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            start = "2019-03-28",
                                            end = "2019-9-28",
                                            autoclose = FALSE),
+                            sliderInput(inputId = "min_launch_angle", 
+                                        label = "Select Minimum Launch Angle:", 
+                                        min = -90, 
+                                        max = 90, 
+                                        value = -90),
+                            sliderInput(inputId = "min_exit_velo", 
+                                        label = "Select Minimum Exit Velocity (MPH):", 
+                                        min = 0, 
+                                        max = 120, 
+                                        value = 0),
+                            sliderInput(inputId = "min_distance", 
+                                        label = "Select Minimum Estimated Distance (ft):", 
+                                        min = 0, 
+                                        max = 500, 
+                                        value = 0),
+                            checkboxGroupInput("hit_result_selection", "Filter by Batted Ball Result:",
+                                               choices = list("Out",
+                                                              "Sacrifice Fly",
+                                                              "Single",
+                                                              "Double",
+                                                              "Triple",
+                                                              "Home Run"),
+                                               selected = c("Out",
+                                                            "Sacrifice Fly",
+                                                            "Single",
+                                                            "Double",
+                                                            "Triple",
+                                                            "Home Run")),
+                            checkboxGroupInput("hit_type_selection", "Filter by Batted Ball Type:",
+                                               choices = list("Ground Ball",
+                                                              "Line Drive",
+                                                              "Fly Ball",
+                                                              "Pop Fly"),
+                                               selected = c("Ground Ball",
+                                                            "Line Drive",
+                                                            "Fly Ball",
+                                                            "Pop Fly")),
                             submitButton("Generate Plot")
                           ),
                           mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart") %>% withSpinner(color="#0dc5c1")))),
@@ -283,7 +298,10 @@ server <- function(input, output, session){
                                       ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
       mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
       filter(hit_result %in% input$hit_result_selection) %>%
-      filter(hit_type %in% input$hit_type_selection)
+      filter(hit_type %in% input$hit_type_selection) %>%
+      filter(launch_angle > input$min_launch_angle) %>%
+      filter(launch_speed > input$min_exit_velo) %>%
+      filter(hit_distance_sc > input$min_distance) 
   })
   
   static_spray_chart <- reactive({
@@ -303,6 +321,12 @@ server <- function(input, output, session){
       geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
       coord_fixed() +
       geom_point(aes(color = hit_result), alpha = 0.6, size = 2) +
+      scale_color_manual(values = c(`Out` = "#F8766D",
+                                    `Sacrifice Fly` = "#C59500",
+                                    `Single` = "#00BA42",
+                                    `Double` = "#00B4E4",
+                                    `Triple` = "#AC88FF",
+                                    `Home Run` = "#F066EA")) +
       scale_x_continuous(limits = c(25, 225)) +
       scale_y_continuous(limits = c(-225, -25)) +
       labs(color = "Hit Result",
