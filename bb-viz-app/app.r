@@ -10,6 +10,7 @@ library(pitchRx)
 library(glue)
 library(readr)
 library(plyr)
+library(shinycssloaders)
 
 #define working directory
 
@@ -118,7 +119,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            end = "2019-9-28"),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart")))),
+                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart") %>% withSpinner(color="#0dc5c1")))),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
@@ -137,7 +138,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             #              selected = 1),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(plotlyOutput(outputId = "pitch_plot"))),
+                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"))),
                  tabPanel("Similarity Search",
                           sidebarPanel(),
                           mainPanel()),
@@ -280,8 +281,8 @@ server <- function(input, output, session){
                                ifelse(bb_type == "fly_ball", "Fly Ball",
                                       ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
       mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
-      filter(hit_result == input$hit_result_selection) %>%
-      filter(hit_type == input$hit_type_selection)
+      filter(hit_result %in% input$hit_result_selection) %>%
+      filter(hit_type %in% input$hit_type_selection)
   })
   
   static_spray_chart <- reactive({
@@ -316,7 +317,7 @@ server <- function(input, output, session){
     validate(
       need(
         nrow(hit_data()) != 0,
-        "Sorry! The batter that you have selected did hit any balls in play in this time period, according to our data. Please select a different batter or time period."))
+        "Sorry! The batter that you have selected did not hit any balls in play of the given specifications in this time period, according to our data. Please adjust your filters or select a different batter or time period."))
     ggplotly(static_spray_chart(), dynamicTicks = TRUE, tooltip = 'text') %>%
       layout(xaxis = list(
         title = "",
