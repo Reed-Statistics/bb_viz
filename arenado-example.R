@@ -97,15 +97,17 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
            showticklabels = FALSE,
            showgrid = FALSE))
 
-
+arenado <- arenado %>%
+  select(hc_x, hc_y)
 
 
 ## Shiny App Spray Chart Idea:
 
-# filter by options: hit result, hit type
 # advanced summary stats (average launch angle, average exit velocity, average hit distance, babip, barrel rate, iso, 
 # woba, estimated woba balls in play, estimated babip)
 # filter by minimum/maximum launch angle, exit velocity, distance
 # group by year
-# date slider
+# counting stats (home runs, hits, singles, etc.)
+# hit type %
+# warning: may include missing values
 
