@@ -31,13 +31,15 @@ arenado <- arenado %>%
   mutate(hit_type = ifelse(bb_type == "line_drive", "Line Drive",
                              ifelse(bb_type == "fly_ball", "Fly Ball",
                                     ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
-  mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) 
+  mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
+  select(game_date, player_name, hc_x, hc_y, hit_distance_sc, launch_speed, launch_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, hit_result, hit_type)
                                                  
 
 
 ## Sample Plot (Spray Chart)
 
 arenado_plot <- arenado %>%
+  filter(hit_result == "Home Run") %>%
   ggplot(aes(x = hc_x, y = -hc_y)) +
   geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
   geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
@@ -45,8 +47,8 @@ arenado_plot <- arenado %>%
              curvature = -0.65, linetype = "dotted", color = "grey66") +
   coord_fixed() +
   geom_point(aes(color = hit_result), alpha = 0.6, size = 2) +
-  scale_x_continuous(limits = c(25, 225)) +
-  scale_y_continuous(limits = c(-225, -25)) +
+  scale_x_continuous(limits = c(0, 230)) +
+  scale_y_continuous(limits = c(-230, 0)) +
   labs(title = "Nolan Arenado Spray Chart",
        subtitle = "2019 MLB Season",
        color = "Hit Result") +
@@ -97,8 +99,6 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
            showticklabels = FALSE,
            showgrid = FALSE))
 
-arenado <- arenado %>%
-  select(hc_x, hc_y)
 
 
 ## Shiny App Spray Chart Idea:
@@ -106,10 +106,9 @@ arenado <- arenado %>%
 # advanced summary stats (average launch angle, average exit velocity, average hit distance, babip, barrel rate, iso, 
 # woba, estimated woba balls in play, estimated babip)
 # filter by minimum/maximum launch angle, exit velocity, distance
-# group by year
+# group by game_year
 # counting stats (home runs, hits, singles, etc.)
 # hit type %
 # warning: may include missing values
 # fix missing values (NAs?)
-# density option?
 
