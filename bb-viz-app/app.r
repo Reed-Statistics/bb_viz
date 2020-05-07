@@ -279,7 +279,9 @@ server <- function(input, output, session){
       mutate(hit_type = ifelse(bb_type == "line_drive", "Line Drive",
                                ifelse(bb_type == "fly_ball", "Fly Ball",
                                       ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
-      mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run")))
+      mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
+      filter(hit_result == input$hit_result_selection) %>%
+      filter(hit_type == input$hit_type_selection)
   })
   
   static_spray_chart <- reactive({
@@ -329,7 +331,7 @@ server <- function(input, output, session){
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
       config(displayModeBar = F) %>% 
-      layout(autosize = F, width = 500, height = 400) %>%
+      layout(autosize = F, width = 575, height = 425) %>%
       layout(font = font)
   })
   
