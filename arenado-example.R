@@ -102,8 +102,8 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 
 ## Shiny App Spray Chart Idea:
 
-# more hover over results: estimated BA, description (inning, teams, score)?
-# filter by options: hit result, pitch name, hit type
-# ouput: plot, title, advanced summary stats 
-
+# filter by options: hit result, hit type
+# advanced summary stats (average launch angle, average exit velocity, average hit distance, babip, barrel rate, iso, 
+# woba, estimated woba balls in play, estimated babip)
+# group by year
 

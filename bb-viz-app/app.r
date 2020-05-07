@@ -263,14 +263,15 @@ server <- function(input, output, session){
   static_spray_chart <- reactive({
     hit_data() %>%
       ggplot(aes(x = as.numeric(hc_x), y = -as.numeric(hc_y),
-                 text = paste('Date:', game_date, "\n",
-                              'Inning:', inning_topbot, inning, "\n",
-                              'Pitch:', pitch_name, "\n",
-                              'Hit Type:', hit_type, "\n",
-                              'Hit Result:', hit_result, "\n",
-                              'Exit Velocity (MPH):', launch_speed, "\n",
-                              'Launch Angle:', launch_angle, "\n",
-                              'Estimated Distance (ft):', hit_distance_sc, "\n",
+                 text = paste('Date: ', game_date, "\n",
+                              'Pitch: ', pitch_name, "\n",
+                              'Hit Type: ', hit_type, "\n",
+                              'Hit Result: ', hit_result, "\n",
+                              'Exit Velocity (MPH): ', launch_speed, "\n",
+                              'Launch Angle: ', launch_angle, "\n",
+                              'Estimated Distance (ft): ', hit_distance_sc, "\n",
+                              'Estimated BA: ', estimated_ba_using_speedangle, "\n",
+                              'Estimated WOBA: ', estimated_woba_using_speedangle, "\n",
                               sep = ""))) +
       geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
       geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
