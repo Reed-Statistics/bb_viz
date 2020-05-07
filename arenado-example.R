@@ -110,4 +110,5 @@ arenado <- arenado %>%
 # counting stats (home runs, hits, singles, etc.)
 # hit type %
 # warning: may include missing values
+# fix missing values (NAs?)
 
