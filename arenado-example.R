@@ -111,4 +111,5 @@ arenado <- arenado %>%
 # hit type %
 # warning: may include missing values
 # fix missing values (NAs?)
+# density option?
 
