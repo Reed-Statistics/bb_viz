@@ -106,4 +106,5 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 # advanced summary stats (average launch angle, average exit velocity, average hit distance, babip, barrel rate, iso, 
 # woba, estimated woba balls in play, estimated babip)
 # group by year
+# date slider
 
