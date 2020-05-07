@@ -1,6 +1,7 @@
 library(baseballr)
 library(tidyverse)
 library(glue)
+library(plyr)
 
 scrape_bb_viz <-
   function(start_date,
@@ -48,10 +49,10 @@ scrape_bb_viz <-
         }
       }
     }
-    return(bind_rows(dfs))
+    return(rbind.fill(dfs))
   }
 
-felix <- scrape_bb_viz(start_date = "2012-03-20",
-                                end_date = "2016-11-10",
+felix <- scrape_bb_viz(start_date = "2012-12-20",
+                                end_date = "2014-11-10",
                                 playerid = 433587,
                                 player_type = "pitcher")

@@ -9,6 +9,7 @@ library(scales)
 library(pitchRx)
 library(glue)
 library(readr)
+library(plyr)
 
 #define working directory
 
@@ -73,7 +74,7 @@ scrape_bb_viz <-
             )
         }
       }
-      return(bind_rows(dfs))
+      return(rbind.fill(dfs))
     }
   }
 
@@ -87,7 +88,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            choices = batters$full_name,
                                            label = "Select Batter",
                                            selected = "Nolan Arenado"),
-                            p("Do not select date ranges outside of the same calendar year."),
+                            p("To avoid common errors, please select starting and ending dates during the MLB
+                              season (Early April to Late October)."),
                             dateRangeInput(inputId = "hit_dates",
                                            label = "Select Date Range",
                                            min = "2015-04-05",
@@ -189,8 +191,8 @@ server <- function(input, output, session){
   static_plot <- reactive({
     pitch_data() %>%
       filter(pitch_type %notin% c("IN", "null")) %>%
-      ggplot(mapping = aes(x = plate_x,
-                           y = plate_z,
+      ggplot(mapping = aes(x = as.numeric(plate_x),
+                           y = as.numeric(plate_z),
                            color = pitch_type,
                            text = paste('Date: ', game_date, "\n",
                                         'Pitch: ', pitch_type, "\n",
@@ -263,7 +265,7 @@ server <- function(input, output, session){
   
   static_spray_chart <- reactive({
     hit_data() %>%
-      ggplot(aes(x = hc_x, y = -hc_y,
+      ggplot(aes(x = as.numeric(hc_x), y = -as.numeric(hc_y),
                  text = paste('Date:', game_date, "\n",
                               'Inning:', inning_topbot, inning, "\n",
                               'Pitch:', pitch_name, "\n",
