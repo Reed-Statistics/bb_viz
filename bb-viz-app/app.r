@@ -453,7 +453,9 @@ server <- function(input, output, session){
                 mutate(woba_denom = as.numeric(woba_denom)) %>%
                 mutate(Year = as.factor(game_year)) %>%
                 mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+                mutate(estimated_woba_using_speedangle = as.numeric(estimated_woba_using_speedangle)) %>%
                 mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+                mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
                 dplyr::group_by(Year) %>%
                 dplyr::summarise(`G` = n_distinct(game_pk),
                           `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
@@ -462,8 +464,8 @@ server <- function(input, output, session){
                           `OPS` = `OBP` + `SLG`,
                           `ISO` = `SLG` - `BA`,
                           `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
-                          `xBABIP` = mean(estimated_ba_using_speedangle, na.rm = TRUE),
-                          `xBA` = `xBABIP`*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
+                          `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
+                          `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
                           `Launch Angle` = mean(launch_angle, na.rm = TRUE),
                           `Exit Velocity` = mean(launch_speed, na.rm = TRUE),
                           `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
