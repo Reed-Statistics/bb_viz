@@ -25,7 +25,6 @@ arenado <- scrape_statcast_savant(
 ## Wrangle
 
 arenado <- arenado %>%
-  filter(description %in% c("hit_into_play", "hit_into_play_no_out", "hit_into_play_score")) %>%
   mutate(hit_result = ifelse(events == "single", "Single",
                                     ifelse(events == "double", "Double",
                                            ifelse(events == "triple", "Triple",
@@ -40,9 +39,37 @@ arenado <- arenado %>%
                                               
 ## Static Summary Practice
 
-arenado <- arenado %>%
+arenado_summary <- arenado %>%
+  mutate(`1B` = ifelse(events == "single", 1, 0),
+         `2B` = ifelse(events == "double", 1, 0),
+         `3B` = ifelse(events == "triple", 1, 0),
+         `HR` = ifelse(events == "home_run", 1, 0),
+         `SF` = ifelse(events == "sac_fly", 1, 0),
+         `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+         `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+         `SO` = ifelse(events == "strikeout", 1, 0),
+         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+  filter(`PA` == 1) %>%
+  rename(Year = game_year) %>%
+  mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
   group_by(game_year) %>%
-  summarise()
+  summarise(`G` = n_distinct(game_pk),
+            `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+            `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
+            `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
+            `OPS` = `OBP` + `SLG`,
+            `ISO` = `SLG` - `BA`,
+            `wOBA` = sum(woba_value)/sum(woba_denom),
+            `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
+            `xBABIP` = mean(estimated_ba_using_speedangle, na.rm = TRUE),
+            `xBA` = ,
+            `Average LA` = mean(launch_angle, na.rm = TRUE),
+            `Average EV` = mean(launch_speed, na.rm = TRUE),
+            `Hard Hit-Rate` = (sum(launch_angle >= 95))/(sum(launch_angle >= 95) + sum(launch_angle < 95)),
+            `Barrel Rate` = (sum(barrel == 1))/(sum(barrel == 0) + sum(barrel == 1)))
+        
+
 
 
 ## Sample Plot (Spray Chart)
@@ -110,14 +137,4 @@ ggplotly(arenado_plot2, dynamicTicks = TRUE, tooltip = 'text') %>%
 
 
 
-## Shiny App Spray Chart Idea:
-
-# advanced summary stats (average launch angle, average exit velocity, average hit distance, babip, barrel rate, iso, 
-# woba, estimated woba balls in play, estimated babip)
-# filter by minimum/maximum launch angle, exit velocity, distance
-# group by game_year
-# counting stats (home runs, hits, singles, etc.)
-# hit type %
-# warning: may include missing values
-# fix missing values (NAs?)
 

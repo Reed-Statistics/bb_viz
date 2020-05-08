@@ -88,14 +88,14 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           sidebarPanel(
                             selectizeInput(inputId = "batter",
                                            choices = batters$full_name,
-                                           label = "Select Batter:",
+                                           label = "Select Player:",
                                            selected = "Nolan Arenado"),
                             dateRangeInput(inputId = "hit_dates",
                                            label = "Select Date Range:",
                                            min = "2015-04-05",
                                            max = Sys.Date(),
                                            start = "2019-03-28",
-                                           end = "2019-9-28",
+                                           end = "2019-09-29",
                                            startview = "year",
                                            autoclose = FALSE),
                             p("Note: Statcast data only collected since 2015"),
@@ -141,6 +141,24 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           mainPanel(
                             plotlyOutput(outputId = "spray_chart") %>% withSpinner(color="#0dc5c1"),
                             dataTableOutput(outputId = "summary_table"))),
+                 tabPanel("Offensive Metrics",
+                          sidebarPanel(
+                            selectizeInput(inputId = "batterMetrics",
+                                           choices = batters$full_name,
+                                           label = "Select Player:",
+                                           selected = "Mookie Betts"),
+                            dateRangeInput(inputId = "metrics_dates",
+                                           label = "Select Date Range:",
+                                           min = "2015-04-05",
+                                           max = Sys.Date(),
+                                           start = "2019-03-28",
+                                           end = "2019-09-29",
+                                           startview = "year",
+                                           autoclose = FALSE),
+                            p("Note: Statcast data only collected since 2015"),
+                            submitButton("Generate Data")
+                          ),
+                          mainPanel(dataTableOutput(outputId = "metrics_table") %>% withSpinner(color="#0dc5c1"))),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
@@ -176,6 +194,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
 server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
   updateSelectizeInput(session = session, inputId = 'batter')
+  updateSelectizeInput(session = session, inputId = 'batterMetrics')
   
   # Pitching output and data compiling
   pitcher_filter <- reactive({
@@ -292,7 +311,6 @@ server <- function(input, output, session){
                            end_date = input$hit_dates[2],
                            playerid = batter_filter()$id,
                            player_type = "batter") %>%
-      filter(description %in% c("hit_into_play", "hit_into_play_no_out", "hit_into_play_score")) %>%
       mutate(hit_result = ifelse(events == "single", "Single",
                                  ifelse(events == "double", "Double",
                                         ifelse(events == "triple", "Triple",
@@ -371,7 +389,93 @@ server <- function(input, output, session){
   })
   
   output$summary_table <- renderDataTable({
-    datatable(hit_data(), 
+    datatable(hit_data() %>%
+                mutate(`1B` = ifelse(events == "single", 1, 0),
+                       `2B` = ifelse(events == "double", 1, 0),
+                       `3B` = ifelse(events == "triple", 1, 0),
+                       `HR` = ifelse(events == "home_run", 1, 0),
+                       `SF` = ifelse(events == "sac_fly", 1, 0),
+                       `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+                       `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+                       `SO` = ifelse(events == "strikeout", 1, 0),
+                       `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+                       `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+                filter(`PA` == 1) %>%
+                mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+                mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+                group_by(game_year) %>%
+                summarise(`G` = n_distinct(game_pk),
+                          `Average Launch Angle` = mean(launch_angle, na.rm = TRUE),
+                          `Average Exit Velocity` = mean(launch_speed, na.rm = TRUE),
+                          `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
+                          `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+                mutate(`Average Launch Angle` = round(`Average Launch Angle`, 1)) %>%
+                mutate(`Average Exit Velocity` = round(`Average Exit Velocity`, 1)) %>%
+                mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
+                mutate(`Barrel %` = round(`Barrel %`, 1)),
+              options = list(paging = FALSE,
+                             searching = FALSE,
+                             orderClasses = FALSE,
+                             ordering = FALSE))
+  })
+  
+  # Metrics output and data compiling
+  metrics_filter <- reactive({
+    batters %>%
+      filter(full_name == input$batterMetrics)
+  })
+  
+  metrics_data <- reactive({
+    scrape_bb_viz(start_date = input$metrics_dates[1],
+                  end_date = input$metrics_dates[2],
+                  playerid = metrics_filter()$id,
+                  player_type = "batter")
+  })
+  
+  output$metrics_table <- renderDataTable({
+    datatable(metrics_data() %>%
+                mutate(`1B` = ifelse(events == "single", 1, 0),
+                       `2B` = ifelse(events == "double", 1, 0),
+                       `3B` = ifelse(events == "triple", 1, 0),
+                       `HR` = ifelse(events == "home_run", 1, 0),
+                       `SF` = ifelse(events == "sac_fly", 1, 0),
+                       `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+                       `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+                       `SO` = ifelse(events == "strikeout", 1, 0),
+                       `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+                       `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+                filter(`PA` == 1) %>%
+                mutate(woba_value = as.numeric(woba_value)) %>%
+                mutate(woba_denom = as.numeric(woba_denom)) %>%
+                mutate(game_year = as.numeric(game_year)) %>%
+                mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+                mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+                group_by(game_year) %>%
+                summarise(`G` = n_distinct(game_pk),
+                          `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+                          `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
+                          `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
+                          `OPS` = `OBP` + `SLG`,
+                          `ISO` = `SLG` - `BA`,
+                          `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
+                          `xBABIP` = mean(estimated_ba_using_speedangle, na.rm = TRUE),
+                          `xBA` = `xBABIP`*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
+                          `Launch Angle` = mean(launch_angle, na.rm = TRUE),
+                          `Exit Velocity` = mean(launch_speed, na.rm = TRUE),
+                          `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
+                          `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+                mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
+                mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
+                mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
+                mutate(`OPS` = format(round(`OPS`, 3), nsmall = 3)) %>%
+                mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
+                mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
+                mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
+                mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
+                mutate(`Launch Angle` = format(round(`Launch Angle`, 1), nsmall = 1)) %>%
+                mutate(`Exit Velocity` = format(round(`Exit Velocity`, 1), nsmall = 1)) %>%
+                mutate(`Hard Hit %` = format(round(`Hard Hit %`, 1), nsmall = 1)) %>%
+                mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)),
               options = list(paging = FALSE,
                              searching = FALSE,
                              orderClasses = TRUE))
