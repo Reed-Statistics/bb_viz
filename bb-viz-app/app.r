@@ -409,13 +409,13 @@ server <- function(input, output, session){
                           `Average Launch Angle` = mean(launch_angle, na.rm = TRUE),
                           `Average Exit Velocity` = mean(launch_speed, na.rm = TRUE),
                           `Average Distance` = mean(hit_distance_sc, na.rm = TRUE),
-                          `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
-                          `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+                          `Max Exit Velocity` = max(launch_speed),
+                          `Max Distance` = max(hit_distance_sc),
+                          `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE))) %>%
                 mutate(`Average Launch Angle` = format(round(`Average Launch Angle`, 1), nsmall = 1)) %>%
                 mutate(`Average Exit Velocity` = format(round(`Average Exit Velocity`, 1), nsmall = 1)) %>%
                 mutate(`Average Distance` = format(round(`Average Distance`, 1), nsmall = 1)) %>%
-                mutate(`Hard Hit %` = format(round(`Hard Hit %`, 1), nsmall = 1)) %>%
-                mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)),
+                mutate(`Hard Hit %` = format(round(`Hard Hit %`, 1), nsmall = 1)),
               options = list(paging = FALSE,
                              searching = FALSE,
                              orderClasses = FALSE,
