@@ -27,8 +27,8 @@ arenado_summary <- arenado %>%
          `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
          `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
          `SO` = ifelse(events == "strikeout", 1, 0),
-         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
-         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
   filter(`PA` == 1) %>%
   mutate(woba_value = as.numeric(woba_value)) %>%
   mutate(woba_denom = as.numeric(woba_denom)) %>%
@@ -65,7 +65,14 @@ arenado_summary <- arenado %>%
   mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
   mutate(`Barrel %` = round(`Barrel %`, 1))
   
-  
+
+## Pull Data
+
+trout <- scrape_statcast_savant(
+  start_date = "2019-03-28",
+  end_date = "2019-09-29",
+  playerid = 545361,
+  player_type = "batter")
 
   
   
