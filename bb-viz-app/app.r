@@ -11,6 +11,7 @@ library(glue)
 library(readr)
 library(plyr)
 library(shinycssloaders)
+library(DT)
 
 #define working directory
 
@@ -95,22 +96,24 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            max = Sys.Date(),
                                            start = "2019-03-28",
                                            end = "2019-9-28",
+                                           startview = "year",
                                            autoclose = FALSE),
+                            p("Note: Statcast data only collected since 2015"),
                             sliderInput(inputId = "min_launch_angle", 
-                                        label = "Select Minimum Launch Angle:", 
+                                        label = "Select Launch Angle Range:", 
                                         min = -90, 
                                         max = 90, 
-                                        value = -90),
+                                        value = c(-90, 90)),
                             sliderInput(inputId = "min_exit_velo", 
-                                        label = "Select Minimum Exit Velocity (MPH):", 
+                                        label = "Select Exit Velocity Range:", 
                                         min = 0, 
-                                        max = 120, 
-                                        value = 0),
+                                        max = 125, 
+                                        value = c(0, 125)),
                             sliderInput(inputId = "min_distance", 
-                                        label = "Select Minimum Estimated Distance (ft):", 
+                                        label = "Select Estimated Distance Range:", 
                                         min = 0, 
-                                        max = 500, 
-                                        value = 0),
+                                        max = 525, 
+                                        value = c(0, 525)),
                             checkboxGroupInput("hit_result_selection", "Filter by Batted Ball Result:",
                                                choices = list("Out",
                                                               "Sacrifice Fly",
@@ -135,7 +138,9 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                                             "Pop Fly")),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(mainPanel(plotlyOutput(outputId = "spray_chart") %>% withSpinner(color="#0dc5c1")))),
+                          mainPanel(
+                            plotlyOutput(outputId = "spray_chart") %>% withSpinner(color="#0dc5c1"),
+                            dataTableOutput(outputId = "summary_table"))),
                  tabPanel("Pitching Chart",
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
@@ -299,15 +304,20 @@ server <- function(input, output, session){
       mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
       filter(hit_result %in% input$hit_result_selection) %>%
       filter(hit_type %in% input$hit_type_selection) %>%
-      filter(launch_angle > input$min_launch_angle) %>%
-      filter(launch_speed > input$min_exit_velo) %>%
-      filter(hit_distance_sc > input$min_distance) 
+      filter(launch_angle >= input$min_launch_angle[1],
+             launch_angle <= input$min_launch_angle[2]) %>%
+      filter(launch_speed >= input$min_exit_velo[1],
+             launch_speed <= input$min_exit_velo[2]) %>%
+      filter(hit_distance_sc >= input$min_distance[1],
+             hit_distance_sc <= input$min_distance[2]) 
   })
   
   static_spray_chart <- reactive({
     hit_data() %>%
       ggplot(aes(x = as.numeric(hc_x), y = -as.numeric(hc_y),
                  text = paste('Date: ', game_date, "\n",
+                              'Home Team: ', home_team, "\n",
+                              'Away Team: ', away_team, "\n",
                               'Pitch: ', pitch_name, "\n",
                               'Batted Ball Type: ', hit_type, "\n",
                               'Batted Ball Result: ', hit_result, "\n",
@@ -358,6 +368,13 @@ server <- function(input, output, session){
       config(displayModeBar = F) %>% 
       layout(autosize = F, width = 575, height = 425) %>%
       layout(font = font)
+  })
+  
+  output$summary_table <- renderDataTable({
+    datatable(hit_data(), 
+              options = list(paging = FALSE,
+                             searching = FALSE,
+                             orderClasses = TRUE))
   })
   
   

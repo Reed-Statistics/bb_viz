@@ -19,6 +19,9 @@ arenado <- scrape_statcast_savant(
   player_type = "batter")
 
 
+## Static Summary Practice
+
+
 ## Wrangle
 
 arenado <- arenado %>%
@@ -33,7 +36,13 @@ arenado <- arenado %>%
                                     ifelse(bb_type == "ground_ball", "Ground Ball", "Pop Fly")))) %>%
   mutate(hit_result = fct_relevel(hit_result, c("Out", "Sacrifice Fly", "Single", "Double", "Triple", "Home Run"))) %>%
   select(game_date, player_name, hc_x, hc_y, hit_distance_sc, launch_speed, launch_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle, hit_result, hit_type)
-                                                 
+   
+                                              
+## Static Summary Practice
+
+arenado <- arenado %>%
+  group_by(game_year) %>%
+  summarise()
 
 
 ## Sample Plot (Spray Chart)
