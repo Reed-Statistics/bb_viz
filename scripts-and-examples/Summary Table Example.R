@@ -1,8 +1,9 @@
 ## Libraries
 
-library(tidyverse)
 library(baseballr)
 library(plotly)
+library(dplyr)
+library(tidyverse)
 
 
 ## Pull Data
@@ -14,7 +15,7 @@ arenado <- scrape_statcast_savant(
   player_type = "batter")
 
 
-## Figure out: missing IBB, wOBA, join with Lahman (two seperate data tables)
+## Figure out: missing IBB, wOBA, join with Lahman (two seperate data tables), glossary?
 
 ## Summary Table Example
 
@@ -137,13 +138,12 @@ arenado_career %>%
          `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
   filter(`PA` == 1) %>%
   mutate(woba_value = as.numeric(woba_value)) %>%
-  mutate(game_year = as.factor(game_year)) %>%
+  mutate(Year = as.factor(game_year)) %>%
   mutate(woba_denom = as.numeric(woba_denom)) %>%
-  mutate(game_year = as.numeric(game_year)) %>%
   mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
   mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
-  group_by(game_year) %>%
-  summarise(`G` = n_distinct(game_pk),
+  dplyr::group_by(Year) %>%
+  dplyr::summarise(`G` = n_distinct(game_pk),
             `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
             `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
             `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),

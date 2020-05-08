@@ -10,6 +10,7 @@ library(pitchRx)
 library(glue)
 library(readr)
 library(plyr)
+library(dplyr)
 library(shinycssloaders)
 library(DT)
 
@@ -450,11 +451,11 @@ server <- function(input, output, session){
                 filter(`PA` == 1) %>%
                 mutate(woba_value = as.numeric(woba_value)) %>%
                 mutate(woba_denom = as.numeric(woba_denom)) %>%
-                mutate(game_year = as.numeric(game_year)) %>%
+                mutate(Year = as.factor(game_year)) %>%
                 mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
                 mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
-                group_by(game_year) %>%
-                summarise(`G` = n_distinct(game_pk),
+                dplyr::group_by(Year) %>%
+                dplyr::summarise(`G` = n_distinct(game_pk),
                           `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
                           `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
                           `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
