@@ -402,17 +402,20 @@ server <- function(input, output, session){
                        `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
                 filter(`PA` == 1) %>%
                 mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+                mutate(hit_distance_sc = as.numeric(hit_distance_sc)) %>%
                 mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
                 group_by(game_year) %>%
                 summarise(`G` = n_distinct(game_pk),
                           `Average Launch Angle` = mean(launch_angle, na.rm = TRUE),
                           `Average Exit Velocity` = mean(launch_speed, na.rm = TRUE),
+                          `Average Distance` = mean(hit_distance_sc, na.rm = TRUE),
                           `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
                           `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
-                mutate(`Average Launch Angle` = round(`Average Launch Angle`, 1)) %>%
-                mutate(`Average Exit Velocity` = round(`Average Exit Velocity`, 1)) %>%
-                mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
-                mutate(`Barrel %` = round(`Barrel %`, 1)),
+                mutate(`Average Launch Angle` = format(round(`Average Launch Angle`, 1), nsmall = 1)) %>%
+                mutate(`Average Exit Velocity` = format(round(`Average Exit Velocity`, 1), nsmall = 1)) %>%
+                mutate(`Average Distance` = format(round(`Average Distance`, 1), nsmall = 1)) %>%
+                mutate(`Hard Hit %` = format(round(`Hard Hit %`, 1), nsmall = 1)) %>%
+                mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)),
               options = list(paging = FALSE,
                              searching = FALSE,
                              orderClasses = FALSE,

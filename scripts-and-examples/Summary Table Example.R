@@ -66,8 +66,7 @@ arenado_summary <- arenado %>%
   mutate(`Barrel %` = round(`Barrel %`, 1))
   
   
-  
-  
+
   
   
   
