@@ -17,6 +17,7 @@ library(DT)
 # Load all static dataframes here
 batters <- read_csv("../batters.csv")
 pitchers <- read_csv("../pitchers.csv")
+player_stats <- read_csv("../stats.csv")
 
 # Set font properties
 font <- list(
