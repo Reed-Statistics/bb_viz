@@ -179,6 +179,39 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          label = "Color By:",
                                          choices = list("Pitch Type" = "pitch_type", "Speed" = "release_speed"),
                                          selected = "pitch_type"),
+                            checkboxGroupInput("pitch_type_selection", "Filter by Pitch Type:",
+                                               choices = list("Fastball (4 Seam)",
+                                                              "Fastball (2 Seam)",
+                                                              "Fastball (Cut)",
+                                                              "Sinker",
+                                                              "Splitter",
+                                                              "Slider",
+                                                              "Changeup",
+                                                              "Curveball",
+                                                              "Knuckle Curve",
+                                                              "Knuckleball",
+                                                              "Forkball",
+                                                              "Eephus",
+                                                              "Screwball",
+                                                              "Intentional Ball",
+                                                              "Pitch out",
+                                                              "Unknown"),
+                                               selected = c("Fastball (4 Seam)",
+                                                            "Fastball (2 Seam)",
+                                                            "Fastball (Cut)",
+                                                            "Sinker",
+                                                            "Splitter",
+                                                            "Slider",
+                                                            "Changeup",
+                                                            "Curveball",
+                                                            "Knuckle Curve",
+                                                            "Knuckleball",
+                                                            "Forkball",
+                                                            "Eephus",
+                                                            "Screwball",
+                                                            "Intentional Ball",
+                                                            "Pitch out",
+                                                            "Unknown")),
                             submitButton("Generate Plot")
                           ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"))),
@@ -249,7 +282,8 @@ server <- function(input, output, session){
           pitch_type == "PO" ~ "Pitch out",
           pitch_type == "UN" ~ "Unknown"
         )
-      )
+      ) %>%
+      dplyr::filter(pitch_type %in% input$pitch_type_selection)
   })
   
   static_plot <- reactive({
