@@ -177,8 +177,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            end = "2019-09-28"),
                             radioButtons(inputId = "radio",
                                          label = "Color By:",
-                                         choices = list("Pitch Type" = "pitch_type", "Speed" = "release_speed"),
-                                         selected = "pitch_type"),
+                                         choices = list("Pitch Type" = 1, "Speed" = 2),
+                                         selected = 1),
                             sliderInput(inputId = "pitch_speed", 
                                         label = "Filter by Pitch Speed:", 
                                         min = 40, 
@@ -228,7 +228,11 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
                               as a final project for Math 241: Data Science at Reed College in Spring 2020.
                               The goal of this app is to allow the user to explore and visualize many
-                              of the advanced metrics that have been recorded for Major League Baseball since 2008.")
+                              of the advanced metrics that have been recorded for Major League Baseball since 2008."),
+                            p('The data used for this app was primarily pulled from ',
+                              a(href = 'https://baseballsavant.mlb.com/statcast_search', 'Statcast', .noWS = "outside"),
+                              ', and tools were used from packages such as `Lahman`, `baseballr`, and `pitchRx`.',
+                              .noWS = c("after-begin", "before-end")) 
                           ))
 )
 
@@ -294,6 +298,7 @@ server <- function(input, output, session){
   })
   
   static_plot <- reactive({
+    if(input$radio == 1) {
     pitch_data() %>%
       filter(pitch_type %notin% c("IN", "null")) %>%
       ggplot(mapping = aes(x = as.numeric(plate_x),
@@ -321,6 +326,35 @@ server <- function(input, output, session){
             plot.title = element_text(hjust = 0.5),
             legend.position = "bottom") +
       guides(colour = guide_legend(title.position = "top"))
+    }
+    else {
+      pitch_data() %>%
+        filter(pitch_type %notin% c("IN", "null")) %>%
+        ggplot(mapping = aes(x = as.numeric(plate_x),
+                             y = as.numeric(plate_z),
+                             color = release_speed,
+                             text = paste('Date: ', game_date, "\n",
+                                          'Pitch: ', pitch_type, "\n",
+                                          'Release Speed: ', release_speed, "\n",
+                                          'Result: ', description, "\n",
+                                          sep = "")
+        )
+        ) +
+        coord_fixed() +
+        geom_point(alpha = 0.5) +
+        geom_segment(x = -0.85, xend = 0.85, y = 3.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
+        geom_segment(x = -0.85, xend = 0.85, y = 1.5, yend = 1.5, size = 0.7, color = "black", lineend = "round") +
+        geom_segment(x = -0.85, xend = -0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
+        geom_segment(x = 0.85, xend = 0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
+        scale_color_viridis_c() +
+        labs(color = "Release Speed",
+             title = glue("{input$pitcher} Pitches by Release Speed <br><sub>{input$dates[1]} to {input$dates[2]}<sub>")) +
+        xlim(-6,6) +
+        theme_void() +
+        theme(plot.margin = margin(0.5, 0.5, 0.5, 0.5, "cm"),
+              plot.title = element_text(hjust = 0.5),
+              legend.position = "bottom") 
+    }
   })
   
   output$pitch_plot <- renderPlotly({
