@@ -75,7 +75,6 @@ arenado_summary <- arenado %>%
 ## Sample Plot (Spray Chart)
 
 arenado_plot <- arenado %>%
-  filter(hit_result == "Home Run") %>%
   ggplot(aes(x = hc_x, y = -hc_y)) +
   geom_segment(x = 128, xend = 20, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +
   geom_segment(x = 128, xend = 236, y = -208, yend = -100, size = 0.7, color = "grey66", lineend = "round") +

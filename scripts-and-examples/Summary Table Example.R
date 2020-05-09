@@ -4,7 +4,7 @@ library(baseballr)
 library(plotly)
 library(dplyr)
 library(tidyverse)
-
+library(reshape2)
 
 ## Pull Data
 
@@ -15,7 +15,7 @@ arenado <- scrape_statcast_savant(
   player_type = "batter")
 
 
-## Figure out: missing IBB, make more accurate, wOBA, join with Lahman (two seperate data tables), glossary?
+## Figure out: aggregate plot metric v. value (with custom title), join with Lahman (two seperate data tables), color blue, missing foul balls
 
 ## Summary Table Example
 
@@ -28,45 +28,41 @@ arenado_summary <- arenado %>%
          `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
          `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
          `SO` = ifelse(events == "strikeout", 1, 0),
-         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
-         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
   filter(`PA` == 1) %>%
   mutate(woba_value = as.numeric(woba_value)) %>%
   mutate(woba_denom = as.numeric(woba_denom)) %>%
-  mutate(game_year = as.numeric(game_year)) %>%
+  mutate(Year = as.factor(game_year)) %>%
   mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
   mutate(estimated_woba_using_speedangle = as.numeric(estimated_woba_using_speedangle)) %>%
   mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
   mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
-  group_by(game_year) %>%
-  summarise(`Year` = mean(game_year),
-            `G` = n_distinct(game_pk),
+  group_by(Year) %>%
+  summarise(`G` = n_distinct(game_pk),
             `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
             `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
             `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
             `OPS` = `OBP` + `SLG`,
             `ISO` = `SLG` - `BA`,
-            `xwOBABIP` = mean(estimated_woba_using_speedangle, na.rm = TRUE),
             `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
             `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
-            `xBA` = `xBABIP`*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
-            `Launch Angle` = mean(launch_angle, na.rm = TRUE),
-            `Exit Velocity` = mean(launch_speed, na.rm = TRUE),
-            `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
+            `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
             `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
-  mutate(`BA` = round(`BA`, 3)) %>%
-  mutate(`OBP` = round(`OBP`, 3)) %>%
-  mutate(`SLG` = round(`SLG`, 3)) %>%
-  mutate(`OPS` = round(`OPS`, 3)) %>%
-  mutate(`ISO` = round(`ISO`, 3)) %>%
-  mutate(`xwOBABIP` = round(`xwOBABIP`, 3)) %>%
-  mutate(`BABIP` = round(`BABIP`, 3)) %>%
-  mutate(`xBABIP` = round(`xBABIP`, 3)) %>%
-  mutate(`xBA` = round(`xBA`, 3)) %>%
-  mutate(`Launch Angle` = round(`Launch Angle`, 1)) %>%
-  mutate(`Exit Velocity` = round(`Exit Velocity`, 1)) %>%
-  mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
-  mutate(`Barrel %` = round(`Barrel %`, 1))
+  mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
+  mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
+  mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
+  mutate(`OPS` = format(round(`OPS`, 3), nsmall = 3)) %>%
+  mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
+  mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
+  mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
+  mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
+  mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)) %>%
+  ggplot(mapping = aes(x = `Year`, y = `xBA`)) +
+  geom_col(size = 1.2) +
+  labs(x = "Year", 
+       y = "Expected Batting Average (xBA)") +
+theme_minimal()
   
 
 ## Pull Data
@@ -153,7 +149,7 @@ arenado_career %>%
             `ISO` = `SLG` - `BA`,
             `wOBA` = mean(woba_value)/mean(woba_denom),
             `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
-            `xBABIP` = mean(estimated_ba_using_speedangle[(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` ==)], na.rm = TRUE),
+            `xBABIP` = mean(estimated_ba_using_speedangle[(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 0)], na.rm = TRUE),
             `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
             `Launch Angle` = mean(launch_angle, na.rm = TRUE),
             `Exit Velocity` = mean(launch_speed, na.rm = TRUE),
@@ -172,6 +168,55 @@ arenado_career %>%
   mutate(`Exit Velocity` = round(`Exit Velocity`, 1)) %>%
   mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
   mutate(`Barrel %` = round(`Barrel %`, 1))
+
+## Summary Plot
+
+arenado_plot_summary <- arenado %>%
+  mutate(`1B` = ifelse(events == "single", 1, 0),
+         `2B` = ifelse(events == "double", 1, 0),
+         `3B` = ifelse(events == "triple", 1, 0),
+         `HR` = ifelse(events == "home_run", 1, 0),
+         `SF` = ifelse(events == "sac_fly", 1, 0),
+         `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+         `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+         `SO` = ifelse(events == "strikeout", 1, 0),
+         `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+         `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+  filter(`PA` == 1) %>%
+  mutate(woba_value = as.numeric(woba_value)) %>%
+  mutate(woba_denom = as.numeric(woba_denom)) %>%
+  mutate(Year = as.factor(game_year)) %>%
+  mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+  mutate(estimated_woba_using_speedangle = as.numeric(estimated_woba_using_speedangle)) %>%
+  mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+  mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
+  group_by(Year) %>%
+  summarise(`G` = n_distinct(game_pk),
+            `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+            `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
+            `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
+            `OPS` = `OBP` + `SLG`,
+            `ISO` = `SLG` - `BA`,
+            `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
+            `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
+            `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
+            `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+  mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
+  mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
+  mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
+  mutate(`OPS` = format(round(`OPS`, 3), nsmall = 3)) %>%
+  mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
+  mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
+  mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
+  mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
+  mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)) %>%
+  aggregate() %>%
+  pivot_longer(cols, names_to = "Metric", values_to = "Value") %>%
+  ggplot(mapping = aes(x = Year, y = `xBA`)) +
+  geom_col(size = 1.2) +
+  labs(x = "Year", 
+       y = "Expected Batting Average (xBA)") +
+  theme_minimal()
   
   
 
