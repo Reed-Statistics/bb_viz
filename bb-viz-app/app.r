@@ -179,6 +179,11 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          label = "Color By:",
                                          choices = list("Pitch Type" = "pitch_type", "Speed" = "release_speed"),
                                          selected = "pitch_type"),
+                            sliderInput(inputId = "pitch_speed", 
+                                        label = "Filter by Pitch Speed:", 
+                                        min = 40, 
+                                        max = 110, 
+                                        value = c(40, 110)),
                             checkboxGroupInput("pitch_type_selection", "Filter by Pitch Type:",
                                                choices = list("Fastball (4 Seam)",
                                                               "Fastball (2 Seam)",
@@ -283,7 +288,9 @@ server <- function(input, output, session){
           pitch_type == "UN" ~ "Unknown"
         )
       ) %>%
-      dplyr::filter(pitch_type %in% input$pitch_type_selection)
+      dplyr::filter(pitch_type %in% input$pitch_type_selection) %>%
+      dplyr::filter(release_speed >= input$pitch_speed[1],
+                    release_speed <= input$pitch_speed[2])
   })
   
   static_plot <- reactive({
