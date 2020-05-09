@@ -1,4 +1,4 @@
-#load libraries here
+# Load all libraries here
 library(shiny)
 library(shinythemes)
 library(tidyverse)
@@ -14,23 +14,18 @@ library(dplyr)
 library(shinycssloaders)
 library(DT)
 
-#define working directory
-
-head(daily_batter_bref(t1 = "2015-08-01", t2 = "2015-10-03"))
-`%notin%` <- Negate(`%in%`)
-
 # Load all static dataframes here
 batters <- read_csv("../batters.csv")
 pitchers <- read_csv("../pitchers.csv")
 
-# Fonts Properties
-
+# Set font properties
 font <- list(
   family = "Helvetica Neue",
   size = 14,
   color = 'gray0')
 
-# Scraping Function
+# Load scraping function & "not in" Function
+`%notin%` <- Negate(`%in%`)
 
 scrape_bb_viz <-
   function(start_date,
@@ -168,13 +163,13 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             selectizeInput(inputId = "pitcher",
                                            choices = pitchers$full_name,
                                            label = "Select Pitcher:",
-                                           selected = "Justin Verlander"),
+                                           selected = "Felix Hernandez"),
                             dateRangeInput(inputId = "dates",
                                            label = "Select Date Range:",
                                            min = "2008-03-25",
                                            max = Sys.Date(),
-                                           start = "2019-03-28",
-                                           end = "2019-09-28"),
+                                           start = "2009-03-28",
+                                           end = "2009-09-28"),
                             radioButtons(inputId = "radio",
                                          label = "Color By:",
                                          choices = list("Pitch Type" = 1, "Speed" = 2),
@@ -605,8 +600,6 @@ server <- function(input, output, session){
                              searching = FALSE,
                              orderClasses = TRUE))
   })
-  
-  
 }
 
 # Creates app
