@@ -173,8 +173,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            label = "Select Date Range:",
                                            min = "2008-03-25",
                                            max = Sys.Date(),
-                                           start = "2009-03-28",
-                                           end = "2009-09-28"),
+                                           start = "2019-03-28",
+                                           end = "2019-09-29"),
                             radioButtons(inputId = "radio",
                                          label = "Color By:",
                                          choices = list("Pitch Type" = 1, "Speed" = 2),
@@ -516,44 +516,46 @@ server <- function(input, output, session){
   
   output$metrics_graph <- renderPlot({
     metrics_data() %>%
-                mutate(`1B` = ifelse(events == "single", 1, 0),
-                       `2B` = ifelse(events == "double", 1, 0),
-                       `3B` = ifelse(events == "triple", 1, 0),
-                       `HR` = ifelse(events == "home_run", 1, 0),
-                       `SF` = ifelse(events == "sac_fly", 1, 0),
-                       `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
-                       `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
-                       `SO` = ifelse(events == "strikeout", 1, 0),
-                       `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
-                       `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
-                filter(`PA` == 1) %>%
-                mutate(woba_value = as.numeric(woba_value)) %>%
-                mutate(woba_denom = as.numeric(woba_denom)) %>%
-                mutate(Year = as.factor(game_year)) %>%
-                mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
-                mutate(estimated_woba_using_speedangle = as.numeric(estimated_woba_using_speedangle)) %>%
-                mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
-                mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
-                group_by(Year) %>%
-                summarise(`BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
-                                 `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
-                                 `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
-                                 `ISO` = `SLG` - `BA`,
-                                 `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
-                                 `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
-                                 `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1))) %>%
-                mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
-                mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
-                mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
-                mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
-                mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
-                mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
-                mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
-      aggregate() %>%
-      pivot_longer(cols, names_to = "Metric", values_to = "Value") %>%
-      ggplot(mapping = aes(x = Year, y = `xBA`)) +
+      mutate(`1B` = ifelse(events == "single", 1, 0),
+             `2B` = ifelse(events == "double", 1, 0),
+             `3B` = ifelse(events == "triple", 1, 0),
+             `HR` = ifelse(events == "home_run", 1, 0),
+             `SF` = ifelse(events == "sac_fly", 1, 0),
+             `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+             `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+             `SO` = ifelse(events == "strikeout", 1, 0),
+             `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+             `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+      filter(`PA` == 1) %>%
+      mutate(woba_value = as.numeric(woba_value)) %>%
+      mutate(woba_denom = as.numeric(woba_denom)) %>%
+      mutate(Year = as.factor(game_year)) %>%
+      mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+      mutate(estimated_woba_using_speedangle = as.numeric(estimated_woba_using_speedangle)) %>%
+      mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+      mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
+      group_by(Year) %>%
+      summarise(`BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+                `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
+                `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
+                `ISO` = `SLG` - `BA`,
+                `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
+                `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
+                `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1))) %>%
+      mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
+      mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
+      mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
+      mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
+      mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
+      mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
+      mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
+      select(BA, ISO, BABIP, xBABIP, xBA) %>%
+      tidyr::pivot_longer(cols = c(BA, ISO, BABIP, xBABIP, xBA), names_to = "Metric", values_to = "Value") %>%
+      mutate(Metric = fct_relevel(Metric, "BA", "xBA", "BABIP", "xBABIP", "ISO")) %>%
+      ggplot(mapping = aes(x = Metric, y = Value)) +
       geom_col(color = "#00B4E4", fill = "#00B4E4") +
-      labs(x = "Metric", 
+      labs(title = glue("{input$batterMetrics} Offensive Metrics: {input$metrics_dates[1]} to {input$metrics_dates[2]}"),
+           x = "Metric", 
            y = "Value") +
       theme_minimal()
   })

@@ -191,32 +191,29 @@ arenado_plot_summary <- arenado %>%
   mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
   mutate(estimated_woba_using_speedangle = na_if(estimated_woba_using_speedangle, "null")) %>%
   group_by(Year) %>%
-  summarise(`G` = n_distinct(game_pk),
-            `BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+  summarise(`BA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
             `OBP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1) + sum(`BB` == 1) + sum(`HBP` == 1))/(sum(`PA` == 1)),
             `SLG` = (sum(`1B` == 1) + 2*sum(`2B` == 1) + 3*sum(`3B` == 1) + 4*sum(`HR` == 1))/(sum(`AB` == 1)),
-            `OPS` = `OBP` + `SLG`,
             `ISO` = `SLG` - `BA`,
             `BABIP` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1))/(sum(`AB` == 1) - sum(`HR` == 1) - sum(`SO` == 1) + sum(`SF` == 1)),
             `xBABIP` = (mean(estimated_ba_using_speedangle[events != "home_run"], na.rm = TRUE)),
-            `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1)),
-            `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+            `xBA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1))) %>%
   mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
   mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
   mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
-  mutate(`OPS` = format(round(`OPS`, 3), nsmall = 3)) %>%
   mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
   mutate(`BABIP` = format(round(`BABIP`, 3), nsmall = 3)) %>%
   mutate(`xBABIP` = format(round(`xBABIP`, 3), nsmall = 3)) %>%
   mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
-  mutate(`Barrel %` = format(round(`Barrel %`, 1), nsmall = 1)) %>%
-  aggregate() %>%
-  pivot_longer(cols, names_to = "Metric", values_to = "Value") %>%
-  ggplot(mapping = aes(x = Year, y = `xBA`)) +
-  geom_col(size = 1.2) +
-  labs(x = "Year", 
-       y = "Expected Batting Average (xBA)") +
+  select(BA, ISO, BABIP, xBABIP, xBA) %>%
+  tidyr::pivot_longer(cols = c(BA, ISO, BABIP, xBABIP, xBA), names_to = "Metric", values_to = "Value") %>%
+  mutate(Metric = fct_relevel(Metric, "BA", "xBA", "BABIP", "xBABIP", "ISO")) %>%
+  ggplot(mapping = aes(x = Metric, y = Value)) +
+  geom_col(color = "#00B4E4", fill = "#00B4E4") +
+  labs(title = glue("{input$batterMetrics} Offensive Metrics: {input$metrics_dates[1]} to {input$metrics_dates[2]}"),
+       x = "Metric", 
+       y = "Value") +
   theme_minimal()
-  
+})
   
 
