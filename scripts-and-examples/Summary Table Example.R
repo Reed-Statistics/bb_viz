@@ -221,7 +221,11 @@ arenado_plot_summary <- arenado %>%
 stats <- read_csv("stats.csv")
 
 stats <- stats %>%
-  dplyr::rename(AB = b_ab,
+  arrange(year) %>%
+  arrange(last_name) %>%
+  unite("full_name", 2:1, sep = " ") %>%
+  dplyr::rename(Year = year,
+                AB = b_ab,
                 PA = b_total_pa,
                 BA = batting_avg,
                 SLG = slg_percent,
@@ -239,17 +243,29 @@ stats <- stats %>%
                 `Sweet Spot %` = sweet_spot_percent,
                 `Barrel %` = barrel_batted_rate) %>%
   mutate(ISO = SLG - BA) %>%
-  select(last_name, first_name, year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`) %>%
-  arrange(year) %>%
-  arrange(last_name)
+  select(full_name, Year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`)
 
-write_csv(stats, "/home/leonardr/baseball_viz/stats_renamed.csv")
+
+write_csv(stats, "/home/leonardr/baseball_viz/metrics.csv")
+
+metrics <- read_csv("/home/leonardr/baseball_viz/metrics.csv")
 
 convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
 relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
 stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
 
-
-
+mookie <- metrics %>%
+  filter(full_name == "Mookie Betts") %>%
+  select(Year, BA, xBA, wOBA, xwOBA) %>%
+  tidyr::pivot_longer(cols = c(BA, xBA, wOBA, xwOBA), names_to = "Metric", values_to = "Value") %>%
+  mutate(Metric = fct_relevel(Metric, "BA", "xBA", "wOBA", "xwOBA")) %>%
+  ggplot(mapping = aes(x = Metric, y = Value)) +
+  geom_col(color = "#00B4E4", fill = "#00B4E4") +
+  labs(title = glue("Mookie"),
+       x = "Metric", 
+       y = "Value") +
+  facet_wrap(~Year, nrow = 1) +
+  theme_minimal()
+  
   
 
