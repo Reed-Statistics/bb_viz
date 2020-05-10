@@ -1,0 +1,241 @@
+---
+title: "playground"
+author: "Jonathan Li"
+date: "5/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load all libraries here
+library(shiny)
+library(shinythemes)
+library(shinydashboard)
+library(kableExtra)
+library(ggfortify)
+library(FNN)
+library(tidyverse)
+library(baseballr)
+library(plotly)
+library(viridis)
+library(scales)
+library(pitchRx)
+library(glue)
+library(readr)
+library(plyr)
+library(dplyr)
+library(shinycssloaders)
+library(DT)
+```
+
+
+```{r}
+# Define working directory
+player_stats <- read_csv("../stats.csv")
+player_stats <- player_stats %>% 
+  mutate(name = paste(last_name, first_name, sep = ', '))
+relevant_stats <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate")
+target_player <- "Beltran, Carlos"
+```
+
+```{r}
+selectedData2 <- player_stats%>%
+      filter(player_stats$name != target_player)
+
+#select target player data
+selectedData3 <- player_stats%>%
+    filter(player_stats$name == target_player)
+
+  
+#bind the two tables together into master table
+selectedData4 <- rbind(selectedData3,selectedData2)
+
+#select the numericss that we are clustering on
+selectedData5 <- selectedData4 %>%
+    select(relevant_stats)
+  
+#conduct clustering
+selectedData6 <- 
+  as.numeric(knnx.index(selectedData5, selectedData5[1, , drop=FALSE], k=11))
+
+#select chosen players
+selectedData7 <- 
+  selectedData4[selectedData6,]
+
+  
+#select relvant stats
+selectedData8 <- 
+    selectedData7 %>%
+      select(relevant_stats)
+
+```
+```{r}
+plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself'
+    ) %>% 
+  add_trace(
+    r = as.matrix(selectedData8[1,]),
+    theta = relevant_stats,
+    showlegend = TRUE,
+    mode = "markers",
+    name = as.character(selectedData7[1,1])
+  ) %>%
+  layout(
+    polar = list(
+      radialaxis = list(
+        visible = T,
+        range = c(0,100)
+      )
+    )
+  )
+```
+```{r}
+add_web <- function(fig, r, theta, name) {
+  fig %>% add_trace(
+        r = r,
+        theta = theta,
+        showlegend = TRUE,
+        mode = "markers",
+        name = name
+      ) 
+}
+```
+
+```{r}
+fig <- plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself'
+    ) 
+for (i in 1:(n+1)) {
+  fig <- add_web(fig, 
+                 as.matrix(selectedData8[i,]), 
+                 relevant_stats, 
+                 as.character(selectedData7[i,1]))
+}
+fig %>%
+  layout(
+    polar = list(
+      radialaxis = list(
+        visible = T,
+        range = c(0,100)
+      )
+    ),
+    showlegend=TRUE
+  )
+```
+
+
+```{r}
+
+    plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself'
+    ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[1,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        name = selectedData7[1,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[2,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[2,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[3,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[3,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[4,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[4,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[5,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[5,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[6,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[6,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[7,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[7,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[8,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[8,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[9,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[9,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[10,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[10,1]
+      ) %>%
+      add_trace(
+        r = as.matrix(selectedData8[11,]),
+        theta = relevant_stats,
+        showlegend = TRUE,
+        mode = "markers",
+        visible="legendonly",
+        name = selectedData7[11,1]
+      ) %>%
+      layout(
+        polar = list(
+          radialaxis = list(
+            visible = T,
+            range = c(0,10)
+          )
+        ),
+
+        showlegend=TRUE
+
+
+      )
+```
+

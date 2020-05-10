@@ -1,122 +1,232 @@
-# Load all necessary packages and functions here
+# Load all libraries here
 library(shiny)
 library(shinythemes)
+library(shinydashboard)
+library(kableExtra)
+library(ggfortify)
+library(FNN)
 library(tidyverse)
 library(baseballr)
 library(plotly)
 library(viridis)
 library(scales)
 library(pitchRx)
+library(glue)
+library(readr)
+library(plyr)
+library(dplyr)
+library(shinycssloaders)
+library(DT)
 
-`%notin%` <- Negate(`%in%`)
+# Define working directory
+player_stats <- read_csv("../stats.csv")
+player_stats <- player_stats %>% 
+  mutate(name = paste(last_name, first_name, sep = ', '))
 
-# Load all static dataframes here
-players <- players
+#predefined variables
+relevant_stats <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate")
+add_web <- function(fig, r, theta, name) {
+  fig %>% add_trace(
+    r = r,
+    theta = theta,
+    showlegend = TRUE,
+    mode = "markers",
+    name = name
+  ) 
+}
+n <- 10
 
-# User interface
-ui <- navbarPage(theme = shinytheme("flatly"),
-                 title = "An Interactive Baseball Visualization Application",
-                 tabPanel("Spray Chart",
-                          sidebarPanel(),
-                          mainPanel()),
-                 tabPanel("Pitching Chart",
-                          sidebarPanel(
-                            selectizeInput(inputId = "pitcher",
-                                           choices = players$full_name,
-                                           label = "Select pitcher",
-                                           selected = NULL)
-                          ),
-                          mainPanel(plotlyOutput(outputId = "pitch_plot"))),
-                 tabPanel("Similarity Search",
-                          sidebarPanel(),
-                          mainPanel()),
-                 tabPanel("Information",
-                          sidebarPanel(),
-                          mainPanel())
-                 )
 
-# Server function
-server <- function(input, output, session){
-  updateSelectizeInput(session = session, inputId = 'pitcher')
-
-# Pitching output and data compiling
-pitch_data <- reactive({
-  scrape_statcast_savant(start_date = "2014-03-20",
-                           end_date = "2014-11-10",
-                           playerid = 433587,
-                           player_type = "pitcher") %>%
-    mutate(description = ifelse(description == "blocked_ball", "Blocked Ball",
-                                  ifelse(description == "called_strike", "Called Strike",
-                                         ifelse(description %in% c("ball",
-                                                                   "intent_ball"), "Ball",
-                                                ifelse(description == "foul", "Foul",
-                                                       ifelse(description %in% c("swinging_strike",
-                                                                                 "swinging_strike_blocked"), "Swinging Strike",
-                                                              ifelse(description %in% c("hit_into_play_no_out",
-                                                                                        "hit_into_play_score",
-                                                                                        "hit_into_play"), "Hit into Play",
-                                                                     ifelse(description == "pitchout", "Pitch Out",
-                                                                            ifelse(description == "foul tip", "Foul Tip",
-                                                                                   ifelse(description %in% c("missed_bunt",
-                                                                                                             "foul_bunt"), "Bunt Attempt", "Hit by Pitch")))))))))) %>%
-    mutate(pitch_type = ifelse(pitch_type == "CU", "Curveball",
-                                 ifelse(pitch_type == "SI", "Sinker",
-                                        ifelse(pitch_type == "CH", "Changeup",
-                                               ifelse(pitch_type == "FF", "Fastball",
-                                                      ifelse(pitch_type == "PO", "Pitch out",
-                                                             ifelse(pitch_type == "SL", "Slider",
-                                                                    ifelse(pitch_type == "IN", "Intentional Ball", "Null"))))))))
+server <- function(input, output, session) {
+  
+  #remove input player from data
+  selectedData1 <- reactive({
+    player_stats%>%
+      filter(player_stats$name != input$player)
   })
 
 
-static_plot <- reactive({
-  pitch_data() %>%
-    filter(pitch_type %notin% c("IN", "null")) %>%
-    ggplot(mapping = aes(x = plate_x,
-                         y = plate_z,
-                         color = pitch_type,
-                         text = paste('Date: ', game_date, "\n",
-                                      'Pitch: ', pitch_type, "\n",
-                                      'Release Speed: ', release_speed, "\n",
-                                      'Result: ', description, "\n",
-                                      sep = "")
+  #conduct filtering
+  selectedData2 <- reactive({
+    selectedData1() 
+    # %>%
+    #   select(1,4,5,6,7,10,39,26,34,24,25,12,13,14,15,16,23,17,
+    #          18,19,20,28,27,22,21,29,30,31,32,33) %>%
+    #   filter(selectedData1()$position %in% input$position,
+    #          selectedData1()$foot %in% input$foot) %>%
+    #   filter(overall >= input$overall[1]) %>%
+    #   filter(overall <= input$overall[2]) %>%
+    #   filter(height >= input$height[1])  %>%
+    #   filter(height <= input$height[2])
+  })
+  
+  #select target player data
+  selectedData3 <- reactive({
+    player_stats%>%
+      filter(player_stats$name == input$player)
+
+  })
+  
+  #bind the two tables together into master table
+  selectedData4 <- reactive({
+    rbind(selectedData3(),selectedData2())
+
+  })
+  #select the numericss that we are clustering on
+  selectedData5 <- reactive({
+    selectedData4() %>%
+      select(relevant_stats)
+  })
+  #conduct clustering
+  selectedData6 <- reactive({
+    as.numeric(knnx.index(selectedData5(), selectedData5()[1, , drop=FALSE], k=n+1))
+  })
+  #select chosen players
+  selectedData7 <- reactive({
+    selectedData4()[selectedData6(),]
+  })
+  
+  #select relvant stats
+  selectedData8 <- reactive({
+    selectedData7() %>%
+      select(relevant_stats)
+  })
+  # 
+  # 
+  # # Combine the selected variables into a new data frame
+  output$plot1 <- renderPlotly({
+
+    validate(
+      need(dim(selectedData2())[1]>=n, "Sorry, no ten similar players were found.
+           Please change the input filters."
+      )
     )
-    ) +
-    coord_fixed() +
-    geom_point(alpha = 0.5) +
-    geom_segment(x = -0.85, xend = 0.85, y = 3.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
-    geom_segment(x = -0.85, xend = 0.85, y = 1.5, yend = 1.5, size = 0.7, color = "black", lineend = "round") +
-    geom_segment(x = -0.85, xend = -0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
-    geom_segment(x = 0.85, xend = 0.85, y = 1.5, yend = 3.5, size = 0.7, color = "black", lineend = "round") +
-    scale_color_viridis_d() +
-    labs(color = "Pitch Type",
-         title = "Felix Hernandez Pitches by Pitch Type",
-         subtitle = "2014 MLB Season") +
-    xlim(-6,6) +
-    theme_void() +
-    theme(plot.background = element_rect(fill = "grey96"),
-          plot.title = element_text(hjust = 0.5), 
-          plot.subtitle = element_text(hjust = 0.5, face = "italic"),
-          legend.position = "bottom") +
-    guides(colour = guide_legend(title.position = "top"))
-})
 
-output$pitch_plot <- renderPlotly({
-  ggplotly(static_plot(), dynamicTicks = TRUE, tooltip = 'text') %>%
-    layout(xaxis = list(
-      title = "",
-      zeroline = FALSE,
-      showline = FALSE,
-      showticklabels = FALSE,
-      showgrid = FALSE), 
-      yaxis = list(
-        title = "",
-        zeroline = FALSE,
-        showline = FALSE,
-        showticklabels = FALSE,
-        showgrid = FALSE))
-})
+    fig <- plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself'
+    ) 
+    for (i in 1:(n+1)) {
+      fig <- add_web(fig, 
+                     as.matrix(selectedData8()[i,]), 
+                     relevant_stats, 
+                     as.character(selectedData7()[i,1]))
+    }
+    fig %>%
+      layout(
+        polar = list(
+          radialaxis = list(
+            visible = T,
+            range = c(0,100)
+          )
+        ),
+        showlegend=TRUE
+      )
+    fig
 
+  })
+  
 }
+
+
+ui <- navbarPage("The ten most similar players - Pro Evolution Soccer 2019",
+           tabPanel("Graphic",fluidPage(theme = shinytheme("flatly")),
+                    tags$head(
+                      tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
+                    pageWithSidebar(
+                      headerPanel('Apply filters'),
+                      sidebarPanel(width = 4,
+                                   selectInput('player', 'Choose a player:', player_stats$name),
+                                   sliderInput("overall", "Overall:",
+                                               min = 50, max = 100,
+                                               value = c(50,100)),
+                                   sliderInput("height", "Height (cm):",
+                                               min = 155, max = 203,
+                                               value = c(155,203)),
+                                   checkboxGroupInput(inputId = "position",
+                                                      label = 'Position:', choices = c("GK" = "GK", "CB" = "CB",
+                                                                                       "RB"="RB","LB"="LB","DMF"="DMF",
+                                                                                       "CMF"="CMF","AMF"="AMF",
+                                                                                       "RMF"="RMF","LMF"="LMF",
+                                                                                       "RWF"="RWF","LWF"="LWF",
+                                                                                       "SS"="SS","CF"="CF"), 
+                                                      selected = c("CF"="CF"),inline=TRUE),
+                                   checkboxGroupInput(inputId = "foot",
+                                                      label = 'Foot:', choices = c("Right foot" = "Right foot",
+                                                                                   "Left foot" = "Left foot"), 
+                                                      selected = c("Right foot" = "Right foot",
+                                                                   "Left foot" = "Left foot"),inline=TRUE),
+                                   submitButton("Update filters")
+                      ),
+                      mainPanel(
+                        column(8, plotlyOutput("plot1", width = 800, height=700),
+                               p("To visualize the graph of the player, click the icon at side of names
+             in the graphic legend. It is worth noting that graphics will be overlapped.",
+                                 style = "font-size:25px")
+
+                        )
+                      )
+                    )),
+           tabPanel("About",p("We used a data set consisting of 39 attributes from 11,158 players registered
+                          in Pro Evolution Soccer 2019 (PES 2019), an electronic soccer game. The data set
+                          was obtained from ", a("PES Data Base", href="http://pesdb.net/", target="_blank"),
+                              "website using web scraping. This app is an interactive tool that allows any user to choose a soccer player from the game
+                         and find the ten players most similar whith him. The similarity between the players is determined using a data mining technique
+                         called", a("k-nearest neighbors", href="https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm", target="_blank"), ".",style = "font-size:25px"),
+                    
+                    hr(), 
+                    p("The available player positions are:",style = "font-size:25px"),
+                    p("GK: Goalkeeper",style = "font-size:15px;color: blue"),
+                    p("CB: Center Back",style = "font-size:15px;color: blue"),
+                    p("RB: Right Back",style = "font-size:15px;color: blue"),
+                    p("LB: Left Back",style = "font-size:15px;color: blue"),
+                    p("DMF: Defense Midfield",style = "font-size:15px;color: blue"),
+                    p("CMF: Center Midfield",style = "font-size:15px;color: blue"),
+                    p("AMF: Attacking Midfield",style = "font-size:15px;color: blue"),
+                    p("RMF: Right Midfield",style = "font-size:15px;color: blue"),
+                    p("LMF: Left Midfield",style = "font-size:15px;color: blue"),
+                    p("RWF: Right Wing Forward",style = "font-size:15px;color: blue"),
+                    p("LWF: Left Wing Forward",style = "font-size:15px;color: blue"),
+                    p("SS: Second Striker",style = "font-size:15px;color: blue"),
+                    p("CF: Counter Forward",style = "font-size:15px;color: blue"),
+                    hr(), 
+                    
+                    p("The abbreviations used in the radar chart are:",style = "font-size:25px"),
+                    
+                    p("BAL: Unwavering Balance",style = "font-size:15px;color: blue"),
+                    p("STM: Stamina",style = "font-size:15px;color: blue"),
+                    p("SPE: Speed",style = "font-size:15px;color: blue"),
+                    p("EXP: Explosive Power",style = "font-size:15px;color: blue"),
+                    p("ATT: Attacking Prowess",style = "font-size:15px;color: blue"),
+                    p("BCO: Ball Control",style = "font-size:15px;color: blue"),
+                    p("DRI: Dribbling",style = "font-size:15px;color: blue"),
+                    p("LPAS: Low Pass",style = "font-size:15px;color: blue"),
+                    p("APAS: Air Pass (Lofted Pass)",style = "font-size:15px;color: blue"),
+                    p("KPOW: Kicking Power",style = "font-size:15px;color: blue"),
+                    p("FIN: Finishing",style = "font-size:15px;color: blue"),
+                    p("PKIC: Place Kicking",style = "font-size:15px;color: blue"),
+                    p("SWE: Swerve",style = "font-size:15px;color: blue"),
+                    p("HEA: Header",style = "font-size:15px;color: blue"),
+                    p("JUM: Jump",style = "font-size:15px;color: blue"),
+                    p("PHY: Physical Contact",style = "font-size:15px;color: blue"),
+                    p("BWIN: Ball Winning",style = "font-size:15px;color: blue"),
+                    p("DEF: Defensive Prowess",style = "font-size:15px;color: blue"),
+                    p("GOA: Goalkeeping",style = "font-size:15px;color: blue"),
+                    p("GKC: GK Catch",style = "font-size:15px;color: blue"),
+                    p("CLE: Clearing",style = "font-size:15px;color: blue"),
+                    p("REF: Reflexes",style = "font-size:15px;color: blue"),
+                    p("COV: Coverage",style = "font-size:15px;color: blue")),
+           
+           tabPanel("Developers",
+                    p(a("Thiago Valentim Marques", href="http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4201666A2", target="_blank"),style = "font-size:25px"),
+                    p("e-mail: thiagomadridd@gmail.com",style = "font-size:20px"),
+                    p(a("Julio Cesar Soares", href="http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K4417495Y5", target="_blank"),style = "font-size:25px"),
+                    p("email: soares.julio@gmail.com",style = "font-size:20px"),
+                    p(a("Francisco Caninde Assis de Oliveira", href="http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id=K8219531A6", target="_blank"),style = "font-size:25px"),
+                    p("e-mail: frecs123@gmail.com",style = "font-size:20px"))
+           
+)
+
 # Creates app
 shinyApp(ui = ui, server = server)
