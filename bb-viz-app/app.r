@@ -249,8 +249,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  tabPanel("Similarity Search",
                           tags$head(
                             tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
-                          pageWithSidebar(
-                            headerPanel('Apply filters'),
+                          # pageWithSidebar(
+                            # headerPanel('Apply filters'),
                             sidebarPanel(width = 4,
                                          selectInput('player', 'Select Player:', player_stats$name),
                                          p("Note: Only includes qualified players for a given season (min. 475 PA)"),
@@ -270,8 +270,11 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                               ),
                               dataTableOutput(outputId = "table1")
                             )
-                          )),
+                          # )
+                 ),
                  tabPanel("User Guide",
+                          p("The purpose of this app is to help baseball fans explore baseball data.",style = "font-size:22px"),
+                          hr(),
                           p("The metrics used in this app include:",style = "font-size:22px"),
                           hr(),
                           p("BA: Batting Average",style = "font-size:15px"),
