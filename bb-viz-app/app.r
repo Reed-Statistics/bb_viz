@@ -89,6 +89,7 @@ scrape_bb_viz <-
 
 # Define working directory
 convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
+# convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
 player_stats <- read_csv("../stats.csv")
 player_stats <- player_stats %>% 
   mutate(name = paste(paste(first_name, last_name, sep = ' '), year, sep = ' - '))  %>%
@@ -97,8 +98,11 @@ player_stats <- player_stats %>%
 
 #predefined variables
 relevant_stats <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate")
+# relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
 stat_choices <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate", "b_k_percent", "batting_avg","slg_percent","on_base_percent", "bacon", "xobp","xslg","sweet_spot_percent")
+# stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
 table_stats <- c("first_name","last_name", "player_age", "year")
+# table_stats <- c("full_name", "year")
 add_web <- function(fig, r, theta, name) {
   fig %>% add_trace(
     r = r,
