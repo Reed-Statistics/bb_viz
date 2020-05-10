@@ -567,8 +567,8 @@ server <- function(input, output, session){
       ggplot(mapping = aes(x = Metric, y = Value)) +
       geom_col(aes(fill = Metric)) +
       scale_color_manual(values = c(`BA` = "#0dc5c1",
-                                    `xBA` = "#00C1AA",
-                                    `wOBA` = "#F066EA",
+                                    `xBA` = "#F066EA",
+                                    `wOBA` = "#0dc5c1",
                                     `xwOBA` = "#F066EA")) +
       labs(title = glue("{input$batterMetrics} Offensive Metrics ({input$season_range[1]} to {input$season_range[1]})"),
            x = "Metric", 
