@@ -214,6 +214,42 @@ arenado_plot_summary <- arenado %>%
        x = "Metric", 
        y = "Value") +
   theme_minimal()
-})
+
+
+## Stats
+
+stats <- read_csv("stats.csv")
+
+stats <- stats %>%
+  unite("full_name", 2:1, sep = " ") %>%
+  dplyr::rename(Year = year,
+                AB = b_ab,
+                PA = b_total_pa,
+                BA = batting_avg,
+                SLG = slg_percent,
+                OBP = on_base_percent,
+                OPS = on_base_plus_slg,
+                wOBA = woba,
+                xBA = xba,
+                xSLG = xslg,
+                xwOBA = xwoba,
+                xISO = xiso,
+                `K %` = b_k_percent,
+                `BB %` = b_bb_percent,
+                `Launch Angle` = launch_angle_avg,
+                `Exit Velocity` = exit_velocity_avg,
+                `Sweet Spot %` = sweet_spot_percent,
+                `Barrel %` = barrel_batted_rate) %>%
+  mutate(ISO = SLG - BA) %>%
+  select(full_name, Year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`) %>%
+  arrange(Year) %>%
+  arrange(full_name)
+
+write_csv(stats, "/home/leonardr/baseball_viz/stats_renamed.csv")
+
+stats <- read_csv()
+
+
+
   
 
