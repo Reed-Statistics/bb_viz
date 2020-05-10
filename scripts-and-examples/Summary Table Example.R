@@ -221,9 +221,7 @@ arenado_plot_summary <- arenado %>%
 stats <- read_csv("stats.csv")
 
 stats <- stats %>%
-  unite("full_name", 2:1, sep = " ") %>%
-  dplyr::rename(Year = year,
-                AB = b_ab,
+  dplyr::rename(AB = b_ab,
                 PA = b_total_pa,
                 BA = batting_avg,
                 SLG = slg_percent,
@@ -241,13 +239,15 @@ stats <- stats %>%
                 `Sweet Spot %` = sweet_spot_percent,
                 `Barrel %` = barrel_batted_rate) %>%
   mutate(ISO = SLG - BA) %>%
-  select(full_name, Year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`) %>%
-  arrange(Year) %>%
-  arrange(full_name)
+  select(last_name, first_name, year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`) %>%
+  arrange(year) %>%
+  arrange(last_name)
 
 write_csv(stats, "/home/leonardr/baseball_viz/stats_renamed.csv")
 
-stats <- read_csv()
+convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
+relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
+stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
 
 
 

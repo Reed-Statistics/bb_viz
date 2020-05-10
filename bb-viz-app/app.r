@@ -90,7 +90,7 @@ scrape_bb_viz <-
 convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
 player_stats <- read_csv("../stats.csv")
 player_stats <- player_stats %>% 
-  mutate(name = paste(paste(last_name, first_name, sep = ', '), year, sep = ' - '))  %>%
+  mutate(name = paste(paste(first_name, last_name, sep = ' '), year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})
 
 
@@ -253,14 +253,14 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           pageWithSidebar(
                             headerPanel('Apply filters'),
                             sidebarPanel(width = 4,
-                                         selectInput('player', 'Choose a player:', player_stats$name),
+                                         selectInput('player', 'Select Player:', player_stats$name),
                                          checkboxGroupInput(inputId = "selected_stats",
                                                             label = 'Stats to Compare:', choices = stat_choices, 
                                                             selected = relevant_stats,inline=TRUE),
                                          checkboxGroupInput(inputId = "selected_years",
                                                             label = 'Years to Consider:', choices = unique(player_stats$year), 
                                                             selected = 2015,inline=TRUE),
-                                         submitButton("Update filters")
+                                         submitButton("Generate Data")
                             ),
                             mainPanel(
                               column(8, plotlyOutput("plot1", width = 800, height=700) %>% withSpinner(color="#0dc5c1"),
