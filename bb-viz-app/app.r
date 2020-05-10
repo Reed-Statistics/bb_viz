@@ -22,6 +22,7 @@ library(DT)
 batters <- read_csv("../batters.csv")
 pitchers <- read_csv("../pitchers.csv")
 player_stats <- read_csv("../stats.csv")
+# player_stats <- read_csv("../metrics.csv")
 metrics <- read_csv("../metrics.csv")
 
 # Set font properties
@@ -91,6 +92,7 @@ scrape_bb_viz <-
 convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
 # convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
 player_stats <- read_csv("../stats.csv")
+# player_stats <- read_csv("../metrics.csv")
 player_stats <- player_stats %>% 
   mutate(name = paste(paste(first_name, last_name, sep = ' '), year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})
