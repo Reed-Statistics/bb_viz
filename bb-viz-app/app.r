@@ -271,7 +271,13 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                               dataTableOutput(outputId = "table1")
                             )
                           )),
-                 tabPanel("Information",
+                 tabPanel("Use Guide",
+                          p("The abbreviations used in this app include:",style = "font-size:25px"),
+                          hr(),
+                          p("BACON: Batting average on contact",style = "font-size:15px;color: blue"),
+                          p("ISO: Isolated Power",style = "font-size:15px;color: blue")
+                          ),
+                 tabPanel("Developers",
                           mainPanel(
                             p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
                               as a final project for Math 241: Data Science at Reed College in Spring 2020.
