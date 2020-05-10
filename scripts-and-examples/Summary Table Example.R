@@ -15,8 +15,6 @@ arenado <- scrape_statcast_savant(
   player_type = "batter")
 
 
-## Figure out: aggregate plot metric v. value (with custom title), join with Lahman (two seperate data tables), color blue, missing foul balls
-
 ## Summary Table Example
 
 arenado_summary <- arenado %>%

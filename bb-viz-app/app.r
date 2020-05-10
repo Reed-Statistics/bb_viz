@@ -177,7 +177,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            label = "Select Player:",
                                            selected = "Mookie Betts"),
                             sliderInput(inputId = "season_range", 
-                                        label = "Select Seasons:", 
+                                        label = "Select Season Range:", 
                                         min = 2015, 
                                         max = 2019, 
                                         value = c(2015, 2019),
@@ -193,7 +193,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           sidebarPanel(
                             selectizeInput(inputId = "pitcher",
                                            choices = pitchers$full_name,
-                                           label = "Select Pitcher:",
+                                           label = "Select Player:",
                                            selected = "Felix Hernandez"),
                             dateRangeInput(inputId = "dates",
                                            label = "Select Date Range:",
@@ -206,7 +206,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          choices = list("Pitch Type" = 1, "Speed" = 2),
                                          selected = 1),
                             sliderInput(inputId = "pitch_speed", 
-                                        label = "Filter by Pitch Speed:", 
+                                        label = "Select Pitch Speed Range:", 
                                         min = 40, 
                                         max = 110, 
                                         value = c(40, 110)),
@@ -254,10 +254,10 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             sidebarPanel(width = 4,
                                          selectInput('player', 'Select Player:', player_stats$name),
                                          checkboxGroupInput(inputId = "selected_stats",
-                                                            label = 'Stats to Compare:', choices = stat_choices, 
+                                                            label = 'Select Stats to Compare:', choices = stat_choices, 
                                                             selected = relevant_stats,inline=TRUE),
                                          checkboxGroupInput(inputId = "selected_years",
-                                                            label = 'Years to Consider:', choices = unique(player_stats$year), 
+                                                            label = 'Select Years to Consider:', choices = unique(player_stats$year), 
                                                             selected = 2015,inline=TRUE),
                                          submitButton("Generate Data")
                             ),
@@ -271,10 +271,26 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             )
                           )),
                  tabPanel("User Guide",
-                          p("The abbreviations used in this app include:",style = "font-size:25px"),
+                          p("The metrics used in this app include:",style = "font-size:22px"),
                           hr(),
-                          p("BACON: Batting average on contact",style = "font-size:15px;color: blue"),
-                          p("ISO: Isolated Power",style = "font-size:15px;color: blue")
+                          p("BA: Batting Average",style = "font-size:15px"),
+                          p("SLG: Slugging Percentage",style = "font-size:15px"),
+                          p("OBP: On-Base Percentage",style = "font-size:15px"),
+                          p("OPS: On-Base Plus Slugging",style = "font-size:15px"),
+                          p("ISO: Isolated Power",style = "font-size:15px"),
+                          p("wOBA: Weighted On-Base Average",style = "font-size:15px"),
+                          p("xBA: Expected Batting Average (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("xSLG: Expected Slugging Percentage (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("xISO: Expected Isolated Power (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("xwOBA: Expected Weighted On-Base Average (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("K %: Strikeout Rate",style = "font-size:15px"),
+                          p("BB %: Walk Rate",style = "font-size:15px"),
+                          p("Launch Angle: Vertical angle at which the ball leaves a player's bat after being struck",style = "font-size:15px"),
+                          p("Exit Velocity: Speed at which the ball leaves a player's bat after being struck",style = "font-size:15px"),
+                          p("Estimated Distance: Projected flight path distance of batted ball (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("Hard Hit %: Proportion of batted balls with an exit velocity equal or greater to 95 MPH",style = "font-size:15px"),
+                          p("Sweet Spot %: Proportion of batted balls with a launch angle between 8 and 32 degrees",style = "font-size:15px"),
+                          p("Barrel %: Proportion of batted-ball events whose comparable hit types (in terms of exit velocity and launch angle) have led to a minimum .500 batting average and 1.500 slugging percentage",style = "font-size:15px")
                           ),
                  tabPanel("Developers",
                           mainPanel(
@@ -429,6 +445,7 @@ server <- function(input, output, session){
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
       config(displayModeBar = F) %>%
+      layout(autosize = F, width = 600, height = 600) %>%
       layout(font = font)
   })
   
@@ -566,16 +583,16 @@ server <- function(input, output, session){
       mutate(Metric = fct_relevel(Metric, "BA", "xBA", "wOBA", "xwOBA")) %>%
       ggplot(mapping = aes(x = Metric, y = Value)) +
       geom_col(aes(fill = Metric)) +
-      scale_color_manual(values = c(`BA` = "#0dc5c1",
-                                    `xBA` = "#F066EA",
-                                    `wOBA` = "#0dc5c1",
-                                    `xwOBA` = "#F066EA")) +
-      labs(title = glue("{input$batterMetrics} Offensive Metrics ({input$season_range[1]} to {input$season_range[1]})"),
+      scale_fill_manual(values = c(`BA` = "#00B4E4",
+                                   `xBA` = "#AC88FF",
+                                   `wOBA` = "#00B4E4",
+                                   `xwOBA` = "#AC88FF")) +
+      labs(title = glue("{input$batterMetrics} Offensive Metrics"),
            x = "Metric", 
            y = "Value") +
-      theme(legend.title = element_blank()) +
       facet_wrap(~Year, nrow = 1) +
-      theme_minimal()
+      theme_minimal() +
+      theme(legend.position = "none")
   })
   
   output$metrics_table <- renderDataTable({
@@ -583,7 +600,16 @@ server <- function(input, output, session){
                 filter(full_name == input$batterMetrics) %>%
                 filter(Year >= input$season_range[1],
                        Year <= input$season_range[2]) %>%
-                select(Year, BA, OBP, SLG, OPS, ISO, wOBA, xBA, xISO, xwOBA, `K %`, `BB %`),
+                select(Year, BA, OBP, SLG, OPS, ISO, wOBA, xBA, xISO, xwOBA, `K %`, `BB %`) %>%
+                mutate(`BA` = format(round(`BA`, 3), nsmall = 3)) %>%
+                mutate(`OBP` = format(round(`OBP`, 3), nsmall = 3)) %>%
+                mutate(`SLG` = format(round(`SLG`, 3), nsmall = 3)) %>%
+                mutate(`OPS` = format(round(`OPS`, 3), nsmall = 3)) %>%
+                mutate(`ISO` = format(round(`ISO`, 3), nsmall = 3)) %>%
+                mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
+                mutate(`wOBA` = format(round(`wOBA`, 3), nsmall = 3)) %>%
+                mutate(`xISO` = format(round(`xISO`, 3), nsmall = 3)) %>%
+                mutate(`xwOBA` = format(round(`xwOBA`, 3), nsmall = 3)),
     options = list(paging = FALSE,
                    searching = FALSE,
                    orderClasses = TRUE,
@@ -679,7 +705,11 @@ server <- function(input, output, session){
   })
   output$table1 <- renderDataTable({
     datatable(selectedData7() %>%
-                select(c(table_stats,input$selected_stats)))
+                select(c(table_stats,input$selected_stats)),
+              options = list(paging = FALSE,
+                             searching = FALSE,
+                             orderClasses = TRUE,
+                             ordering = TRUE))
   })
 }
 
