@@ -294,17 +294,23 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           p("Sweet Spot %: Proportion of batted balls with a launch angle between 8 and 32 degrees",style = "font-size:15px"),
                           p("Barrel %: Proportion of batted-ball events whose comparable hit types (in terms of exit velocity and launch angle) have led to a minimum .500 batting average and 1.500 slugging percentage",style = "font-size:15px")
                           ),
-                 tabPanel("Developers",
-                          mainPanel(
-                            p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
-                              as a final project for Math 241: Data Science at Reed College in Spring 2020.
-                              The goal of this app is to allow the user to explore and visualize many
-                              of the advanced metrics that have been recorded for Major League Baseball since 2008."),
-                            p('The data used for this app was primarily pulled from ',
-                              a(href = 'https://baseballsavant.mlb.com/statcast_search', 'Statcast', .noWS = "outside"),
-                              ', and tools were used from packages such as `Lahman`, `baseballr`, and `pitchRx`.',
-                              .noWS = c("after-begin", "before-end")) 
-                          ))
+                 tabPanel("Developers & Sources",
+                          tags$p("This app was created by Riley Leonard, Jonathan Li, and",
+                                 tags$a("Grayson White", href = "https://www.github.com/graysonwhite", taget = "_blank"),
+                                 "as a final project for Math 241: Data Science at Reed College in Spring 2020.
+                                 The goal of this app is to allow baseball fans to explore and visualize many
+                                 of the advanced metrics that have been recorded for Major League Baseball since 2008."),
+                          tags$p(
+                            "The data used for this app was primarily pulled from",
+                            tags$a("Statcast,", href="https://baseballsavant.mlb.com/statcast_search", target="_blank"),
+                            "and tools were used from baseball packages such as",
+                            tags$code("Lahman"),
+                            ", ",
+                            tags$code("baseballr"),
+                            ", and",
+                            tags$code("pitchRx"),
+                            ".")
+                 )
 )
 
 # Server function
