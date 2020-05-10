@@ -32,6 +32,10 @@ font <- list(
 # Load scraping function & "not in" Function
 `%notin%` <- Negate(`%in%`)
 
+
+
+
+
 scrape_bb_viz <-
   function(start_date,
            end_date,
@@ -81,6 +85,29 @@ scrape_bb_viz <-
     }
   }
 
+
+# Define working directory
+convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
+player_stats <- read_csv("../stats.csv")
+player_stats <- player_stats %>% 
+  mutate(name = paste(paste(last_name, first_name, sep = ', '), year, sep = ' - '))  %>%
+  mutate_at(convert_to_percent, function(d) {d*100})
+
+
+#predefined variables
+relevant_stats <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate")
+stat_choices <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate", "b_k_percent", "batting_avg","slg_percent","on_base_percent", "bacon", "xobp","xslg","sweet_spot_percent")
+table_stats <- c("first_name","last_name", "player_age", "year")
+add_web <- function(fig, r, theta, name) {
+  fig %>% add_trace(
+    r = r,
+    theta = theta,
+    showlegend = TRUE,
+    mode = "markers",
+    name = name
+  ) 
+}
+n <- 9
 
 # User interface
 ui <- navbarPage(theme = shinytheme("flatly"),
@@ -221,8 +248,29 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           ),
                           mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"))),
                  tabPanel("Similarity Search",
-                          sidebarPanel(),
-                          mainPanel()),
+                          tags$head(
+                            tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
+                          pageWithSidebar(
+                            headerPanel('Apply filters'),
+                            sidebarPanel(width = 4,
+                                         selectInput('player', 'Choose a player:', player_stats$name),
+                                         checkboxGroupInput(inputId = "selected_stats",
+                                                            label = 'Stats to Compare:', choices = stat_choices, 
+                                                            selected = relevant_stats,inline=TRUE),
+                                         checkboxGroupInput(inputId = "selected_years",
+                                                            label = 'Years to Consider:', choices = unique(player_stats$year), 
+                                                            selected = 2015,inline=TRUE),
+                                         submitButton("Update filters")
+                            ),
+                            mainPanel(
+                              column(8, plotlyOutput("plot1", width = 800, height=700),
+                                     p("Double click on a player's name in the legend to isolate layer. See table below for ordered comparisons.",
+                                       style = "font-size:20px")
+                                     
+                              ),
+                              dataTableOutput(outputId = "table1")
+                            )
+                          )),
                  tabPanel("Information",
                           mainPanel(
                             p("This app was created by Riley Leonard, Jonathan Li, and Grayson White
@@ -603,6 +651,98 @@ server <- function(input, output, session){
               options = list(paging = FALSE,
                              searching = FALSE,
                              orderClasses = TRUE))
+  })
+  
+  
+  #remove input player from data
+  selectedData1 <- reactive({
+    player_stats%>%
+      filter(player_stats$name != input$player)
+  })
+  
+  
+  #conduct filtering
+  selectedData2 <- reactive({
+    selectedData1() %>%
+      # select(c(stat_choices, name)) 
+      filter(year == input$selected_years)
+    #   filter(selectedData1()$position %in% input$position,
+    #          selectedData1()$foot %in% input$foot) %>%
+    #   filter(overall >= input$overall[1]) %>%
+    #   filter(overall <= input$overall[2]) %>%
+    #   filter(height >= input$height[1])  %>%
+    #   filter(height <= input$height[2])
+  })
+  
+  #select target player data
+  selectedData3 <- reactive({
+    player_stats%>%
+      filter(player_stats$name == input$player)
+    
+  })
+  
+  #bind the two tables together into master table
+  selectedData4 <- reactive({
+    rbind(selectedData3(),selectedData2())
+    
+  })
+  #select the numericss that we are clustering on
+  selectedData5 <- reactive({
+    selectedData4() %>%
+      select(input$selected_stats)
+  })
+  #conduct clustering
+  selectedData6 <- reactive({
+    as.numeric(knnx.index(selectedData5(), selectedData5()[1, , drop=FALSE], k=n+1))
+  })
+  #select chosen players
+  selectedData7 <- reactive({
+    selectedData4()[selectedData6(),]
+  })
+  
+  #select relvant stats
+  selectedData8 <- reactive({
+    selectedData7() %>%
+      select(input$selected_stats)
+  })
+  # 
+  # 
+  # # Combine the selected variables into a new data frame
+  output$plot1 <- renderPlotly({
+    
+    validate(
+      need(dim(selectedData2())[1]>=n, "Sorry, no ten similar players were found.
+           Please change the input filters."
+      )
+    )
+    
+    fig <- plot_ly(
+      type = 'scatterpolar',
+      mode = "closest",
+      fill = 'toself'
+    ) 
+    for (i in 1:(n+1)) {
+      fig <- add_web(fig, 
+                     as.matrix(selectedData8()[i,]), 
+                     input$selected_stats, 
+                     as.character(selectedData7()$name[i]))
+    }
+    fig %>%
+      layout(
+        polar = list(
+          radialaxis = list(
+            visible = T,
+            range = c(0,100)
+          )
+        ),
+        showlegend=TRUE
+      )
+    fig
+    
+  })
+  output$table1 <- renderDataTable({
+    datatable(selectedData7() %>%
+                select(c(table_stats,input$selected_stats)))
   })
 }
 
