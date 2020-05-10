@@ -554,21 +554,27 @@ server <- function(input, output, session){
                        `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
                        `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "strikeout_double_play" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
                 filter(`PA` == 1) %>%
+                mutate(woba_value = as.numeric(woba_value)) %>%
+                mutate(Year = as.factor(game_year)) %>%
+                mutate(woba_denom = as.numeric(woba_denom)) %>%
                 mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
-                mutate(hit_distance_sc = as.numeric(hit_distance_sc)) %>%
                 mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
-                group_by(game_year) %>%
-                summarise(`G` = n_distinct(game_pk),
-                          `Average Launch Angle` = mean(launch_angle, na.rm = TRUE),
-                          `Average Exit Velocity` = mean(launch_speed, na.rm = TRUE),
-                          `Average Distance` = mean(hit_distance_sc, na.rm = TRUE),
-                          `Max Exit Velocity` = max(launch_speed),
-                          `Max Distance` = max(hit_distance_sc),
-                          `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE))) %>%
-                mutate(`Average Launch Angle` = format(round(`Average Launch Angle`, 1), nsmall = 1)) %>%
-                mutate(`Average Exit Velocity` = format(round(`Average Exit Velocity`, 1), nsmall = 1)) %>%
-                mutate(`Average Distance` = format(round(`Average Distance`, 1), nsmall = 1)) %>%
-                mutate(`Hard Hit %` = format(round(`Hard Hit %`, 1), nsmall = 1)),
+                dplyr::group_by(Year) %>%
+                dplyr::summarise(`G` = n_distinct(game_pk),
+                                 `Average Launch Angle` = mean(launch_angle, na.rm = TRUE),
+                                 `Average Exit Velocity` = mean(launch_speed, na.rm = TRUE),
+                                 `Average Distance` = mean(hit_distance_sc, na.rm = TRUE),
+                                 `Max Exit Velocity` = max(launch_speed, na.rm = TRUE),
+                                 `Max Distance` = max(hit_distance_sc, na.rm = TRUE),
+                                 `Hard Hit %` = 100*(sum(launch_speed >= 95, na.rm = TRUE))/(sum(launch_speed >= 95, na.rm = TRUE) + sum(launch_speed < 95, na.rm = TRUE)),
+                                 `Sweet Spot %` = 100*(sum(launch_angle > 8 & launch_angle < 32, na.rm = TRUE))/(sum(launch_angle > -91, na.rm = TRUE)),
+                                 `Barrel %` = 100*(sum(barrel == 1, na.rm = TRUE))/(sum(barrel == 0, na.rm = TRUE) + sum(barrel == 1, na.rm = TRUE))) %>%
+                mutate(`Average Launch Angle` = round(`Average Launch Angle`, 1)) %>%
+                mutate(`Average Exit Velocity` = round(`Average Exit Velocity`, 1)) %>%
+                mutate(`Average Distance` = round(`Average Distance`, 1)) %>%
+                mutate(`Hard Hit %` = round(`Hard Hit %`, 1)) %>%
+                mutate(`Sweet Spot %` = round(`Sweet Spot %`, 1)) %>%
+                mutate(`Barrel %` = round(`Barrel %`, 1)),
               options = list(paging = FALSE,
                              searching = FALSE,
                              orderClasses = FALSE,
