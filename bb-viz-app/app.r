@@ -263,7 +263,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          submitButton("Update filters")
                             ),
                             mainPanel(
-                              column(8, plotlyOutput("plot1", width = 800, height=700),
+                              column(8, plotlyOutput("plot1", width = 800, height=700) %>% withSpinner(color="#0dc5c1"),
                                      p("Double click on a player's name in the legend to isolate layer. See table below for ordered comparisons.",
                                        style = "font-size:20px")
                                      
@@ -271,7 +271,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                               dataTableOutput(outputId = "table1")
                             )
                           )),
-                 tabPanel("Use Guide",
+                 tabPanel("User Guide",
                           p("The abbreviations used in this app include:",style = "font-size:25px"),
                           hr(),
                           p("BACON: Batting average on contact",style = "font-size:15px;color: blue"),
