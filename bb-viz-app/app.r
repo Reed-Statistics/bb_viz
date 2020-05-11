@@ -92,9 +92,9 @@ scrape_bb_viz <-
 convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
 # convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
 player_stats <- read_csv("../stats.csv")
-# player_stats <- read_csv("../metrics.csv")
 player_stats <- player_stats %>% 
   mutate(name = paste(paste(first_name, last_name, sep = ' '), year, sep = ' - '))  %>%
+  # mutate(name = full_name, year, sep = ' - '))
   mutate_at(convert_to_percent, function(d) {d*100})
 
 
@@ -262,10 +262,10 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          p("Note: Only includes qualified players for a given season (min. 475 PA)"),
                                          checkboxGroupInput(inputId = "selected_stats",
                                                             label = 'Select Stats to Compare:', choices = stat_choices, 
-                                                            selected = relevant_stats,inline=TRUE),
+                                                            selected = relevant_stats),
                                          checkboxGroupInput(inputId = "selected_years",
                                                             label = 'Select Years to Consider:', choices = unique(player_stats$year), 
-                                                            selected = 2015,inline=TRUE),
+                                                            selected = 2019),
                                          submitButton("Generate Data")
                             ),
                             mainPanel(
