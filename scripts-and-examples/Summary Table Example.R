@@ -181,10 +181,8 @@ stats <- read_csv("stats.csv")
 stats <- stats %>%
   arrange(year) %>%
   arrange(last_name) %>%
-  unite("full_name", 2:1, sep = " ") %>%
+  unite("Name", 2:1, sep = " ") %>%
   dplyr::rename(Year = year,
-                AB = b_ab,
-                PA = b_total_pa,
                 BA = batting_avg,
                 SLG = slg_percent,
                 OBP = on_base_percent,
@@ -201,7 +199,7 @@ stats <- stats %>%
                 `Sweet Spot %` = sweet_spot_percent,
                 `Barrel %` = barrel_batted_rate) %>%
   mutate(ISO = SLG - BA) %>%
-  select(full_name, Year, AB, PA, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`)
+  select(Name, Year, BA, SLG, OBP, OPS, ISO, wOBA, xBA, xSLG, xwOBA, xISO, `K %`, `BB %`, `Launch Angle`, `Exit Velocity`, `Sweet Spot %`, `Barrel %`)
 
 
 write_csv(stats, "/home/leonardr/baseball_viz/metrics.csv")
@@ -224,6 +222,17 @@ mookie <- metrics %>%
        y = "Value") +
   facet_wrap(~Year, nrow = 1) +
   theme_minimal()
+
+
+## Pull Data
+
+pitchers <- read_csv("/home/leonardr/baseball_viz/pitchers.csv")
+
+felix <- scrape_statcast_savant(
+  start_date = "2019-03-28",
+  end_date = "2019-09-27",
+  playerid = 433587,
+  player_type = "pitcher")
   
   
 

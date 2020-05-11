@@ -91,14 +91,14 @@ scrape_bb_viz <-
 convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
 player_stats <- read_csv("../metrics.csv")
 player_stats <- player_stats %>% 
-  mutate(name = paste(full_name, Year, sep = ' - '))  %>%
+  mutate(name = paste(Name, Year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})
 
 
 #predefined variables
 relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
 stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
-table_stats <- c("full_name", "Year")
+table_stats <- c("Name", "Year")
 add_web <- function(fig, r, theta, name) {
   fig %>% add_trace(
     r = r,
@@ -173,7 +173,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  tabPanel("Offensive Metrics",
                           sidebarPanel(
                             selectizeInput(inputId = "batterMetrics",
-                                           choices = metrics$full_name,
+                                           choices = metrics$Name,
                                            label = "Select Player:",
                                            selected = "Mookie Betts"),
                             sliderInput(inputId = "season_range", 
@@ -252,7 +252,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           # pageWithSidebar(
                             # headerPanel('Apply filters'),
                             sidebarPanel(width = 4,
-                                         selectInput('player', 'Select Player:', player_stats$name),
+                                         selectInput('player', 'Select Player:', player_stats$name, selected = "Ronald Acuna Jr. - 2019"),
                                          p("Note: Only includes qualified players for a given season (min. 475 PA)"),
                                          checkboxGroupInput(inputId = "selected_stats",
                                                             label = 'Select Stats to Compare:', choices = stat_choices, 
@@ -265,7 +265,9 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             mainPanel(
                               column(8, plotlyOutput("plot1", width = 800, height=700) %>% withSpinner(color="#0dc5c1"),
                                      p("Double click on a player's name in the legend to isolate layer. See table below for ordered comparisons.",
-                                       style = "font-size:20px")
+                                       style = "font-size:16px"),
+                                     p("Note: For ease of comparison, all metrics have been converted to a percent measurement.",
+                                       style = "font-size:14px")
                                      
                               ),
                               dataTableOutput(outputId = "table1")
@@ -589,7 +591,7 @@ server <- function(input, output, session){
   
   output$metrics_graph <- renderPlot({
     metrics %>%
-      filter(full_name == input$batterMetrics) %>%
+      filter(Name == input$batterMetrics) %>%
       filter(Year >= input$season_range[1],
              Year <= input$season_range[2]) %>%
       select(Year, BA, xBA, wOBA, xwOBA) %>%
@@ -611,7 +613,7 @@ server <- function(input, output, session){
   
   output$metrics_table <- renderDataTable({
     datatable(metrics %>%
-                filter(full_name == input$batterMetrics) %>%
+                filter(Name == input$batterMetrics) %>%
                 filter(Year >= input$season_range[1],
                        Year <= input$season_range[2]) %>%
                 select(Year, BA, OBP, SLG, OPS, ISO, wOBA, xBA, xISO, xwOBA, `K %`, `BB %`) %>%
