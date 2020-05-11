@@ -678,7 +678,9 @@ server <- function(input, output, session){
                 mutate(`xBA` = format(round(`xBA`, 3), nsmall = 3)) %>%
                 mutate(`wOBA` = format(round(`wOBA`, 3), nsmall = 3)) %>%
                 mutate(`xISO` = format(round(`xISO`, 3), nsmall = 3)) %>%
-                mutate(`xwOBA` = format(round(`xwOBA`, 3), nsmall = 3)),
+                mutate(`xwOBA` = format(round(`xwOBA`, 3), nsmall = 3)) %>%
+                mutate(`K %` = format(round(`K %`, 1), nsmall = 1)) %>%
+                mutate(`BB %` = format(round(`BB %`, 1), nsmall = 1)),
     options = list(paging = FALSE,
                    searching = FALSE,
                    orderClasses = TRUE,
