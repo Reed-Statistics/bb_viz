@@ -321,7 +321,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
 server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
   updateSelectizeInput(session = session, inputId = 'batter')
-  updateSelectizeInput(session = session, inputId = 'batterMetrics')
+  updateSelectizeInput(session = session, inputId = 'batterMetrics', selected = "Mookie Betts")
   
   # Pitching output and data compiling
   pitcher_filter <- reactive({
@@ -591,9 +591,13 @@ server <- function(input, output, session){
   
   # Metrics output and data compiling
   
-  output$metrics_graph <- renderPlot({
+  metrics_filter <- reactive({
     metrics %>%
-      filter(Name == input$batterMetrics) %>%
+      filter(Name == input$batterMetrics)
+  })
+  
+  output$metrics_graph <- renderPlot({
+    metrics_filter() %>%
       filter(Year >= input$season_range[1],
              Year <= input$season_range[2]) %>%
       select(Year, BA, xBA, wOBA, xwOBA) %>%
@@ -614,8 +618,7 @@ server <- function(input, output, session){
   })
   
   output$metrics_table <- renderDataTable({
-    datatable(metrics %>%
-                filter(Name == input$batterMetrics) %>%
+    datatable(metrics_filter() %>%
                 filter(Year >= input$season_range[1],
                        Year <= input$season_range[2]) %>%
                 select(Year, BA, OBP, SLG, OPS, ISO, wOBA, xBA, xISO, xwOBA, `K %`, `BB %`) %>%
