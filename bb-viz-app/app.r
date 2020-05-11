@@ -450,7 +450,7 @@ server <- function(input, output, session){
     validate(
       need(
       nrow(pitch_data()) != 0,
-      "Sorry! The pitcher that you have selected did not throw any pitches in this time period, according to our data. Please select a different pitcher or time period."))
+      "Sorry! The pitcher that you have selected did not throw any pitches of the given specifications in this date range, according to our data. Please adjust your filters or select a different pitcher or date range."))
     ggplotly(static_plot(), dynamicTicks = TRUE, tooltip = 'text') %>%
       layout(xaxis = list(
         title = "",
@@ -578,7 +578,7 @@ server <- function(input, output, session){
     validate(
       need(
         nrow(hit_data()) != 0,
-        "Sorry! The batter that you have selected did not hit any balls in play of the given specifications in this time period, according to our data. Please adjust your filters or select a different batter or time period."))
+        "Sorry! The batter that you have selected did not hit any balls in play of the given specifications in this date range, according to our data. Please adjust your filters or select a different batter or date range."))
     ggplotly(static_spray_chart(), dynamicTicks = TRUE, tooltip = 'text') %>%
       layout(xaxis = list(
         title = "",
