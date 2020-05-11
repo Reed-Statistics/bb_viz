@@ -21,8 +21,7 @@ library(DT)
 # Load all static dataframes here
 batters <- read_csv("../batters.csv")
 pitchers <- read_csv("../pitchers.csv")
-player_stats <- read_csv("../stats.csv")
-# player_stats <- read_csv("../metrics.csv")
+player_stats <- read_csv("../metrics.csv")
 metrics <- read_csv("../metrics.csv")
 
 # Set font properties
@@ -89,22 +88,17 @@ scrape_bb_viz <-
 
 
 # Define working directory
-convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
-# convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
-player_stats <- read_csv("../stats.csv")
+convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
+player_stats <- read_csv("../metrics.csv")
 player_stats <- player_stats %>% 
-  mutate(name = paste(paste(first_name, last_name, sep = ' '), year, sep = ' - '))  %>%
-  # mutate(name = full_name, year, sep = ' - '))
+  mutate(name = paste(full_name, Year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})
 
 
 #predefined variables
-relevant_stats <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate")
-# relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
-stat_choices <- c("xba", "woba", "xiso", "exit_velocity_avg", "launch_angle_avg", "barrel_batted_rate", "b_k_percent", "batting_avg","slg_percent","on_base_percent", "bacon", "xobp","xslg","sweet_spot_percent")
-# stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
-table_stats <- c("first_name","last_name", "player_age", "year")
-# table_stats <- c("full_name", "year")
+relevant_stats <- c("OBP", "xBA" ,"xwOBA", "K %", "BB %", "Sweet Spot %")
+stat_choices <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO", "K %", "BB %", "Launch Angle", "Exit Velocity", "Sweet Spot %", "Barrel %")
+table_stats <- c("full_name", "Year")
 add_web <- function(fig, r, theta, name) {
   fig %>% add_trace(
     r = r,
@@ -264,8 +258,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                                             label = 'Select Stats to Compare:', choices = stat_choices, 
                                                             selected = relevant_stats),
                                          checkboxGroupInput(inputId = "selected_years",
-                                                            label = 'Select Years to Consider:', choices = unique(player_stats$year), 
-                                                            selected = 2019),
+                                                            label = 'Select Years to Consider:', choices = unique(player_stats$Year), 
+                                                            selected = c(2015, 2016, 2017, 2018, 2019)),
                                          submitButton("Generate Data")
                             ),
                             mainPanel(
@@ -648,7 +642,7 @@ server <- function(input, output, session){
   selectedData2 <- reactive({
     selectedData1() %>%
       # select(c(stat_choices, name)) 
-      filter(year == input$selected_years)
+      filter(Year == input$selected_years)
     #   filter(selectedData1()$position %in% input$position,
     #          selectedData1()$foot %in% input$foot) %>%
     #   filter(overall >= input$overall[1]) %>%
