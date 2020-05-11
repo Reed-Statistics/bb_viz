@@ -297,7 +297,9 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           p("Barrel %: Proportion of batted-ball events whose comparable hit types (in terms of exit velocity and launch angle) have led to a minimum .500 batting average and 1.500 slugging percentage",style = "font-size:15px")
                           ),
                  tabPanel("Developers & Sources",
-                          tags$p("This app was created by Riley Leonard, Jonathan Li, and",
+                          tags$p("This app was created by",
+                                 tags$a("Riley Leonard", href = "https://www.linkedin.com/in/riley-leonard-9653791a6/", taget = "_blank"), 
+                                 ",  Jonathan Li, and",
                                  tags$a("Grayson White", href = "https://www.github.com/graysonwhite", taget = "_blank"),
                                  "as a final project for Math 241: Data Science at Reed College in Spring 2020.
                                  The goal of this app is to allow baseball fans to explore and visualize many
