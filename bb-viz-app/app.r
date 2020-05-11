@@ -245,15 +245,15 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                                             "Unknown")),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1")),
-                          dataTableOutput(outputId = "pitch_table")),
+                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"),
+                          dataTableOutput(outputId = "pitch_table"))),
                  tabPanel("Similarity Search",
                           tags$head(
                             tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
                           # pageWithSidebar(
                             # headerPanel('Apply filters'),
                             sidebarPanel(width = 4,
-                                         selectInput('player', 'Select Player:', player_stats$name, selected = "Ronald Acuna Jr. - 2019"),
+                                         selectInput('player', 'Select Player:', player_stats$name, selected = "Mookie Betts - 2019"),
                                          p("Note: Only includes qualified players for a given season (min. 475 PA)"),
                                          checkboxGroupInput(inputId = "selected_stats",
                                                             label = 'Select Metrics to Compare:', choices = stat_choices, 
