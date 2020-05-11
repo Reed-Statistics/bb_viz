@@ -175,7 +175,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                             selectizeInput(inputId = "batterMetrics",
                                            choices = metrics$Name,
                                            label = "Select Player:",
-                                           selected = "Mookie Betts"),
+                                           selected = "Jose Abre"),
                             sliderInput(inputId = "season_range", 
                                         label = "Select Season Range:", 
                                         min = 2015, 
@@ -300,7 +300,9 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                  tabPanel("Developers & Sources",
                           tags$p("This app was created by",
                                  tags$a("Riley Leonard", href = "https://www.linkedin.com/in/riley-leonard-9653791a6/", taget = "_blank"), 
-                                 ",  Jonathan Li, and",
+                                 ",  ",
+                                 tags$a("Jonathan Li", href = "https://github.com/jonathanmli", taget = "_blank"),
+                                 ", and",
                                  tags$a("Grayson White", href = "https://www.github.com/graysonwhite", taget = "_blank"),
                                  "as a final project for Math 241: Data Science at Reed College in Spring 2020.
                                  The goal of this app is to allow baseball fans to explore and visualize many
@@ -322,7 +324,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
 server <- function(input, output, session){
   updateSelectizeInput(session = session, inputId = 'pitcher')
   updateSelectizeInput(session = session, inputId = 'batter')
-  updateSelectizeInput(session = session, inputId = 'batterMetrics', selected = "Mookie Betts")
+  updateSelectizeInput(session = session, inputId = 'batterMetrics', selected = "Jose Abreu")
   
   # Pitching output and data compiling
   pitcher_filter <- reactive({
