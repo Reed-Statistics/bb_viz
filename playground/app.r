@@ -20,7 +20,7 @@ library(DT)
 
 # Define working directory
 convert_to_percent <- c("batting_avg", "slg_percent", "on_base_percent", "xba","xslg","woba","xobp","xiso","wobacon","bacon")
-player_stats <- read_csv("../stats.csv")
+player_stats <- read_csv("../data/stats.csv")
 player_stats <- player_stats %>% 
   mutate(name = paste(paste(last_name, first_name, sep = ', '), year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})

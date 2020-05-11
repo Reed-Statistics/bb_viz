@@ -19,10 +19,10 @@ library(shinycssloaders)
 library(DT)
 
 # Load all static dataframes here
-batters <- read_csv("../batters.csv")
-pitchers <- read_csv("../pitchers.csv")
-player_stats <- read_csv("../metrics.csv")
-metrics <- read_csv("../metrics.csv")
+batters <- read_csv("../data/batters.csv")
+pitchers <- read_csv("../data/pitchers.csv")
+player_stats <- read_csv("../data/metrics.csv")
+metrics <- read_csv("../data/metrics.csv")
 
 # Set font properties
 font <- list(
@@ -89,7 +89,7 @@ scrape_bb_viz <-
 
 # Define working directory
 convert_to_percent <- c("BA", "SLG", "OBP", "OPS", "ISO", "wOBA", "xBA", "xSLG", "xwOBA", "xISO")
-player_stats <- read_csv("../metrics.csv")
+player_stats <- read_csv("../data/metrics.csv")
 player_stats <- player_stats %>% 
   mutate(name = paste(Name, Year, sep = ' - '))  %>%
   mutate_at(convert_to_percent, function(d) {d*100})
