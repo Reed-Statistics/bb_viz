@@ -201,6 +201,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                            max = Sys.Date(),
                                            start = "2019-03-28",
                                            end = "2019-09-29"),
+                            p("Note: Pitch location data only collected since 2008"),
                             radioButtons(inputId = "radio",
                                          label = "Color By:",
                                          choices = list("Pitch Type" = 1, "Speed" = 2),
@@ -245,7 +246,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                                             "Unknown")),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"),
+                          mainPanel(plotlyOutput(outputId = "pitch_plot", width = 575, height = 425) %>% withSpinner(color="#0dc5c1"),
                           dataTableOutput(outputId = "pitch_table"))),
                  tabPanel("Similarity Search",
                           tags$head(
@@ -253,7 +254,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           # pageWithSidebar(
                             # headerPanel('Apply filters'),
                             sidebarPanel(width = 4,
-                                         selectInput('player', 'Select Player:', player_stats$name, selected = "Mookie Betts - 2019"),
+                                         selectInput('player', 'Select Player:', player_stats$name, selected = "Juan Soto - 2019"),
                                          p("Note: Only includes qualified players for a given season (min. 475 PA)"),
                                          checkboxGroupInput(inputId = "selected_stats",
                                                             label = 'Select Metrics to Compare:', choices = stat_choices, 
@@ -264,7 +265,7 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                          submitButton("Generate Data")
                             ),
                             mainPanel(
-                              column(8, plotlyOutput("plot1", width = 800, height=700) %>% withSpinner(color="#0dc5c1"),
+                              column(8, plotlyOutput("plot1", width = 675, height = 575) %>% withSpinner(color="#0dc5c1"),
                                      p("Double click on a player's name in the legend to isolate layer. See table below for ordered comparisons.",
                                        style = "font-size:16px"),
                                      p("Note: For ease of comparison, all metrics have been converted to a percent measurement.",
@@ -288,14 +289,18 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                           p("xSLG: Expected Slugging Percentage (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
                           p("xISO: Expected Isolated Power (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
                           p("xwOBA: Expected Weighted On-Base Average (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
+                          p("BAA: Batting Average Against",style = "font-size:15px"),
+                          p("xBAA: Expected Batting Average Against (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
                           p("K %: Strikeout Rate",style = "font-size:15px"),
                           p("BB %: Walk Rate",style = "font-size:15px"),
                           p("Launch Angle: Vertical angle at which the ball leaves a player's bat after being struck",style = "font-size:15px"),
-                          p("Exit Velocity: Speed at which the ball leaves a player's bat after being struck",style = "font-size:15px"),
+                          p("Exit Velocity: Speed at which the ball leaves a player's bat after being struck (MPH)",style = "font-size:15px"),
                           p("Estimated Distance: Projected flight path distance of batted ball (Using Launch Angle and Exit Velocity)",style = "font-size:15px"),
                           p("Hard Hit %: Proportion of batted balls with an exit velocity equal or greater to 95 MPH",style = "font-size:15px"),
                           p("Sweet Spot %: Proportion of batted balls with a launch angle between 8 and 32 degrees",style = "font-size:15px"),
-                          p("Barrel %: Proportion of batted-ball events whose comparable hit types (in terms of exit velocity and launch angle) have led to a minimum .500 batting average and 1.500 slugging percentage",style = "font-size:15px")
+                          p("Barrel %: Proportion of batted-ball events whose comparable hit types (in terms of exit velocity and launch angle) have led to a minimum .500 batting average and 1.500 slugging percentage",style = "font-size:15px"),
+                          p("Pitch Speed: Maximum velocity of a given pitch at any point from its release to the time it crosses home plate (MPH)",style = "font-size:15px"),
+                          p("Spin Rate: Rate of spin on a given pitch after it is released (RPM)",style = "font-size:15px")
                           ),
                  tabPanel("Developers & Sources",
                           tags$p("This app was created by",
@@ -460,7 +465,7 @@ server <- function(input, output, session){
           showticklabels = FALSE,
           showgrid = FALSE)) %>% 
       config(displayModeBar = F) %>%
-      layout(autosize = F, width = 600, height = 600) %>%
+      layout(autosize = F, width = 575, height = 425) %>%
       layout(font = font)
   })
   
