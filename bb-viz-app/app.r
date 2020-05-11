@@ -245,7 +245,8 @@ ui <- navbarPage(theme = shinytheme("flatly"),
                                                             "Unknown")),
                             submitButton("Generate Plot")
                           ),
-                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1"))),
+                          mainPanel(plotlyOutput(outputId = "pitch_plot") %>% withSpinner(color="#0dc5c1")),
+                          dataTableOutput(outputId = "pitch_table")),
                  tabPanel("Similarity Search",
                           tags$head(
                             tags$style(HTML(".shiny-output-error-validation{color: red;}"))),
@@ -459,6 +460,46 @@ server <- function(input, output, session){
       config(displayModeBar = F) %>%
       layout(autosize = F, width = 600, height = 600) %>%
       layout(font = font)
+  })
+  
+  output$pitch_table <- renderDataTable({
+    datatable(pitch_data() %>%
+                mutate(`1B` = ifelse(events == "single", 1, 0),
+                       `2B` = ifelse(events == "double", 1, 0),
+                       `3B` = ifelse(events == "triple", 1, 0),
+                       `HR` = ifelse(events == "home_run", 1, 0),
+                       `SF` = ifelse(events == "sac_fly", 1, 0),
+                       `BB` = ifelse(events == "walk" | events == "hit_by_pitch", 1, 0),
+                       `HBP` = ifelse(events == "hit_by_pitch", 1, 0),
+                       `SO` = ifelse(events == "strikeout", 1, 0),
+                       `AB` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play", 1, 0),
+                       `PA` = ifelse(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "strikeout" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play" | events == "walk" | events == "hit_by_pitch" | events == "sac_fly", 1, 0)) %>%
+                filter(`PA` == 1) %>%
+                mutate(woba_value = as.numeric(woba_value)) %>%
+                mutate(woba_denom = as.numeric(woba_denom)) %>%
+                mutate(Year = as.factor(game_year)) %>%
+                mutate(estimated_ba_using_speedangle = as.numeric(estimated_ba_using_speedangle)) %>%
+                mutate(estimated_ba_using_speedangle = na_if(estimated_ba_using_speedangle, "null")) %>%
+                dplyr::group_by(Year) %>%
+                dplyr::summarise(`G` = n_distinct(game_pk),
+                                 `Average Pitch Speed` = mean(release_speed, na.rm = TRUE),
+                                 `Average Spin Rate` = mean(release_spin_rate, na.rm = TRUE),
+                                 `Max Pitch Speed` = max(release_speed, na.rm = TRUE),
+                                 `Max Spin Rate` = max(release_spin_rate, na.rm = TRUE),
+                                 `K %` = 100*sum(`SO` == 1)/sum(`PA` == 1),
+                                 `BB %` = 100*sum(`BB` == 1)/sum(`PA` == 1),
+                                 `BAA` = (sum(`1B` == 1) + sum(`2B` == 1) + sum(`3B` == 1) + sum(`HR` == 1))/(sum(`AB` == 1)),
+                                 `xBAA` = mean(estimated_ba_using_speedangle, na.rm = TRUE)*sum(events == "single" | events == "double" | events == "triple" | events == "home_run" | events == "double_play" | events == "field_error" | events == "field_out" | events == "fielders_choice" | events == "force_out" | events == "grounded_into_double_play")/(sum(`AB` == 1))) %>%
+                mutate(`Average Pitch Speed` = format(round(`Average Pitch Speed`, 1), nsmall = 1)) %>%
+                mutate(`Average Spin Rate` = format(round(`Average Spin Rate`, 1), nsmall = 1)) %>%
+                mutate(`K %` = format(round(`K %`, 1), nsmall = 1)) %>%
+                mutate(`BB %` = format(round(`BB %`, 1), nsmall = 1)) %>%
+                mutate(`BAA` = format(round(`BAA`, 3), nsmall = 3)) %>%
+                mutate(`xBAA` = format(round(`xBAA`, 3), nsmall = 3)),
+              options = list(paging = FALSE,
+                             searching = FALSE,
+                             orderClasses = FALSE,
+                             ordering = FALSE))
   })
   
   # Batting output and data compiling
